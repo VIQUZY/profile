@@ -1,0 +1,368 @@
+/* ------------------------------------------------------------------
+   Лонгрид собран из сцен, нарисованных в макете шириной 1200px.
+   --u — сколько настоящих пикселей в одном пикселе макета.
+   Все размеры ниже умножаются на --u, поэтому страница целиком
+   масштабируется под ширину окна (точное значение ставит js/main.js).
+   ------------------------------------------------------------------ */
+:root {
+  --u: calc(100vw / 1200);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #fff;
+}
+
+/* ---------- Сцена ----------
+   Важно: не добавлять сюда transform, filter, z-index или contain —
+   закреплённые при скролле слои (position: fixed) должны уметь
+   «выходить» за пределы своей сцены, как в оригинале. */
+.scene {
+  position: relative;
+  height: calc((var(--h) + var(--dh, 0)) * var(--u));
+  background: var(--bg, #fff);
+  overflow: hidden;
+}
+
+/* ---------- Слой (картинка или плашка) ---------- */
+.el {
+  position: absolute;
+  z-index: 3;
+  left: calc(var(--x) * var(--u));
+  top: calc((var(--y) + var(--dy, 0)) * var(--u));
+  width: calc(var(--w) * var(--u));
+}
+
+.el img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.shape {
+  height: calc(var(--h) * var(--u));
+}
+
+.blur {
+  filter: blur(calc(var(--blur) * var(--u)));
+}
+
+/* Обёртка, которую двигают анимации. width: inherit нужен,
+   чтобы ширина не схлопывалась, когда слой закреплён (fixed). */
+.fx {
+  width: inherit;
+}
+
+/* ---------- Зацикленные анимации (data-play) ----------
+   Конечное состояние задаётся переменными --to-x, --to-y, --to-scale,
+   --to-rotate; длительность — --dur. Запускает их js/main.js,
+   добавляя класс .playing. */
+@keyframes drift {
+  to {
+    transform:
+      translate(calc(var(--to-x, 0) * var(--u)), calc(var(--to-y, 0) * var(--u)))
+      scale(var(--to-scale, 1))
+      rotate(var(--to-rotate, 0deg));
+  }
+}
+
+.fx.loop,
+.fx.swing,
+.fx.once {
+  animation-name: drift;
+  animation-duration: var(--dur);
+  animation-timing-function: var(--ease, linear);
+  animation-fill-mode: forwards;
+  animation-play-state: paused;
+}
+
+.fx.loop {
+  animation-iteration-count: infinite;
+}
+
+.fx.swing {
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+}
+
+/* Крутим только то, что рядом с экраном */
+.scene.near .fx.playing {
+  animation-play-state: running;
+}
+
+/* ---------- Покачивание (.sway) ----------
+   Лёгкое живое шевеление поверх анимации прокрутки: растения и Весельчак
+   качаются, даже когда страница стоит. --sway — амплитуда поворота,
+   --sway-dur — длительность одного качания, --sway-delay — сдвиг фазы. */
+.sway {
+  transform-origin: 50% 85%;
+  animation: sway var(--sway-dur, 4s) ease-in-out var(--sway-delay, 0s) infinite alternate;
+}
+
+@keyframes sway {
+  from {
+    transform: rotate(calc(var(--sway, 6deg) * -1)) scale(0.98);
+  }
+  to {
+    transform: rotate(var(--sway, 6deg)) scale(1.04);
+  }
+}
+
+.scene:not(.near) .sway {
+  animation-play-state: paused;
+}
+
+/* ---------- Появление при прокрутке (data-in) ----------
+   У всех слоёв одинаковые длительность, сдвиг и плавность:
+   они задаются один раз здесь. */
+:root {
+  --in-dur: 1.2s;                              /* длительность появления */
+  --in-dist: 100;                              /* на сколько px макета слой выезжает снизу */
+  --in-ease: cubic-bezier(0.33, 1, 0.68, 1);   /* плавное замедление к концу */
+}
+
+.js .el[data-in] {
+  opacity: 0;
+  transition:
+    opacity var(--in-dur) var(--in-ease),
+    transform var(--in-dur) var(--in-ease);
+}
+
+.js .el[data-in="up"] {
+  transform: translateY(calc(var(--in-dist) * var(--u)));
+}
+
+.js .el[data-in].in {
+  opacity: 1;
+  transform: none;
+}
+
+/* ---------- Текст с обводкой (.caption) ----------
+   Белые буквы, чёрная обводка и жёлтая подложка вокруг — как на
+   картинках из макета, но настоящим текстом.
+   Контуры рисует SVG (его собирает js/main.js из текста блока), поэтому
+   края гладкие на любом экране. Сам HTML-текст лежит сверху прозрачным:
+   его можно выделить, скопировать и найти поиском.
+   Всё настраивается переменными; размеры — в пикселях макета. */
+@font-face {
+  font-family: "Inter Display";
+  src: url("../fonts/InterDisplay-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+.caption {
+  --size: 24;                /* кегль */
+  --leading: 1.21;           /* интерлиньяж */
+  --tracking: -0.005em;      /* межбуквенное расстояние */
+  --stroke: 3.1;             /* толщина чёрной обводки */
+  --halo: 9.4;               /* насколько жёлтая подложка выступает за букву */
+  --blur: 0.4;               /* размытие всего слоя (layer blur) */
+  --ink: #fff;
+  --stroke-color: #000;
+  --halo-color: #ffd805;
+  --pad: 4;                  /* отступ текста от верха слоя */
+
+  position: relative;
+  isolation: isolate;
+  /* на телефоне текст крупнее (--cap-scale ставит js/main.js) */
+  transform: scale(var(--cap-scale, 1));
+  transform-origin: 50% 0;
+  /* колонка с выравниванием по центру: строка шире слоя
+     выступает поровну в обе стороны */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: calc(var(--pad) * var(--u));
+  font-family: "Inter Display", "Inter", system-ui, sans-serif;
+  font-weight: 500;
+  font-size: calc(var(--size) * var(--u));
+  line-height: var(--leading);
+  letter-spacing: var(--tracking);
+  text-align: center;
+  white-space: nowrap;
+  color: var(--ink);
+  filter: blur(calc(var(--blur) * var(--u)));
+  /* запасной вид без JavaScript: простая чёрная обводка */
+  text-shadow:
+    0.08em 0 0 #000, -0.08em 0 0 #000, 0 0.08em 0 #000, 0 -0.08em 0 #000,
+    0.06em 0.06em 0 #000, -0.06em 0.06em 0 #000, 0.06em -0.06em 0 #000, -0.06em -0.06em 0 #000;
+}
+
+.caption p {
+  margin: 0;
+}
+
+/* пустая строка между абзацами */
+.caption p + p {
+  margin-top: calc(var(--leading) * 1em);
+}
+
+/* Когда SVG с контурами готов, HTML-текст становится прозрачным */
+.caption.drawn {
+  color: transparent;
+  text-shadow: none;
+}
+
+.caption-art {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: -1;
+  width: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+/* внутри SVG единица = пиксель макета */
+.caption-art text {
+  font-size: calc(var(--size) * 1px);
+  letter-spacing: var(--tracking);
+  text-anchor: middle;
+  text-shadow: none;
+}
+
+.caption-art use {
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.caption-art .halo,
+.caption-art .halo-fill {
+  fill: var(--halo-color);
+  stroke: var(--halo-color);
+  stroke-width: calc(var(--halo) * 2px);
+}
+
+/* Второй, более узкий слой подложки: очень толстая обводка оставляет
+   крошечные просветы внутри «о», «е» и вокруг точек — он их закрывает. */
+.caption-art .halo-fill {
+  stroke-width: calc(var(--halo) * 1.2px);
+}
+
+.caption-art .stroke {
+  fill: var(--stroke-color);
+  stroke: var(--stroke-color);
+  stroke-width: calc(var(--stroke) * 2px);
+}
+
+.caption-art .ink {
+  fill: var(--ink);
+}
+
+/* ---------- Плавный переход между сценами (.seam) ----------
+   Между сценами лежит полоса «матового стекла»: она размывает то, что под
+   ней, и сама плавно растворяется к краям, поэтому вместо чёткой линии
+   получается мягкий переход. Чтобы убрать переход в одном месте, удали
+   нужный <div class="seam"> в index.html. */
+:root {
+  --seam: 320;        /* высота полосы перехода, px макета */
+  --seam-blur: 44;    /* сила размытия, px макета */
+}
+
+/* Размытие перехода касается только фона сцены (первый слой, .bg).
+   Тексты, персонажи и остальные картинки лежат выше и остаются чёткими;
+   их порядок между собой как в макете. */
+.el {
+  z-index: 5;
+}
+
+.el.bg {
+  z-index: 3;
+}
+
+.seam {
+  position: relative;
+  z-index: 4;
+  height: 0;
+  pointer-events: none;
+}
+
+.seam::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(var(--seam) * -0.5 * var(--u));
+  height: calc(var(--seam) * var(--u));
+  -webkit-backdrop-filter: blur(calc(var(--seam-blur) * var(--u)));
+  backdrop-filter: blur(calc(var(--seam-blur) * var(--u)));
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 40%, #000 60%, transparent);
+  mask-image: linear-gradient(to bottom, transparent, #000 40%, #000 60%, transparent);
+}
+
+/* ---------- Градиент в цвет следующей сцены (.fade-to-next) ----------
+   Плавный переход из «студия союзмультфильм» в пейзаж с планетой: низ
+   сцены уходит в зелёный, а сама картинка пейзажа не затрагивается.
+   --fade-color — цвет, в который уходит градиент. */
+.fade-to-next {
+  --fade-color: #367b16;
+  height: calc(var(--h) * var(--u));
+  background: linear-gradient(to bottom, transparent, var(--fade-color) 60%, var(--fade-color));
+}
+
+/* Тонкая растушёвка по самому верху пейзажа: тот же зелёный уходит
+   в прозрачность, чтобы стык не читался. --h — её высота (px макета). */
+.fade-from-prev {
+  --fade-color: #367b16;
+  height: calc(var(--h) * var(--u));
+  background: linear-gradient(to bottom, var(--fade-color), rgb(54 123 22 / 0.6) 35%, transparent);
+  pointer-events: none;
+}
+
+/* ---------- Бегущая строка (.ticker) ----------
+   Картинка assets/ticker.png повторяется по горизонтали и бесконечно
+   едет влево. --ticker-h — высота строки, --ticker-speed — время одного
+   полного круга картинки. */
+.ticker {
+  --ticker-h: 106;                     /* высота строки, px макета */
+  --ticker-w: calc(var(--ticker-h) * 3786 / 184); /* ширина картинки при этой высоте */
+  --ticker-speed: 24s;
+  height: calc(var(--ticker-h) * var(--u));
+  background: #ffd706 url("../assets/ticker.png") repeat-x 0 0 / calc(var(--ticker-w) * var(--u)) 100%;
+  animation: ticker var(--ticker-speed) linear infinite;
+}
+
+@keyframes ticker {
+  to {
+    background-position-x: calc(var(--ticker-w) * var(--u) * -1);
+  }
+}
+
+/* ---------- Плёнка с шумом поверх страницы ---------- */
+.noise {
+  position: fixed;
+  inset: 0;
+  z-index: 99999999;
+  pointer-events: none;
+  opacity: 0.15;
+  background: #d00417 url("../images/noise.gif") repeat;
+}
+
+
+/* ---------- Если в системе выключены анимации ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .fx.loop,
+  .fx.swing,
+  .ticker,
+  .sway {
+    animation: none;
+  }
+
+  .fx.once {
+    animation-duration: 1ms;
+  }
+
+  .js .el[data-in] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
