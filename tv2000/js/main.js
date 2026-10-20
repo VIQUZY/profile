@@ -41,29 +41,83 @@
      около MOBILE_TEXT_PX настоящих пикселей. Если увеличенные тексты
      наезжают друг на друга, нижний сдвигается вниз, а сцена при нужде
      удлиняется. На компьютере ничего не меняется. */
-  const MOBILE_TEXT_PX = 15;
-  const CAPTION_GAP = 30; // зазор между текстами, px макета
+  const MOBILE_LAYOUT = false;
+  const MOBILE_TEXT_PX = 17;
+  const CAPTION_GAP = 60; // зазор между текстами, px макета
 
   function fitCaptions() {
-    const scale = Math.min(2.2, Math.max(1, MOBILE_TEXT_PX / (24 * unit)));
+    const scale = phone ? Math.min(2.8, Math.max(1, MOBILE_TEXT_PX / (24 * unit))) : 1;
     root.style.setProperty('--cap-scale', scale.toFixed(3));
+    const num = (el, name) => parseFloat(el.style.getPropertyValue(name)) || 0;
     for (const scene of scenes) {
       scene.style.removeProperty('--dh');
-      const items = [...scene.querySelectorAll('.caption')].map((caption) => {
-        const el = caption.closest('.el');
-        el.style.removeProperty('--dy');
-        return { el, y: parseFloat(el.style.getPropertyValue('--y')) || 0, h: caption.offsetHeight / unit * scale };
-      });
+      const layers = [...scene.querySelectorAll('.el')];
+      layers.forEach((el) => el.style.removeProperty('--dy'));
+      const items = layers
+        .filter((el) => el.querySelector('.caption'))
+        .map((el) => {
+          const caption = el.querySelector('.caption');
+          const h = caption.offsetHeight / unit; // уже увеличенная высота
+          return { el, y: num(el, '--y'), h, h0: h / scale };
+        });
       if (scale === 1 || !items.length) continue;
       items.sort((a, b) => a.y - b.y);
-      let bottom = -Infinity;
-      for (const item of items) {
-        const shift = Math.max(0, bottom + CAPTION_GAP - item.y);
+
+      // Высота картинки слоя в px макета
+      const layerH = (el) => {
+        const img = el.querySelector('img');
+        if (!img) return num(el, '--h');
+        const w = img.naturalWidth || +img.getAttribute('width');
+        const h = img.naturalHeight || +img.getAttribute('height');
+        return (num(el, '--w') * h) / w;
+      };
+
+      // 1. Раскладываем сверху вниз тексты и картинки в центре экрана
+      //    (персонажи, гифки между абзацами), чтобы ничего не наезжало.
+      //    Картинки по краям (цветы, декор) остаются где были.
+      const central = layers.filter((el) => {
+        if (el.classList.contains('bg') || el.querySelector('.caption')) return false;
+        const x = num(el, '--x'), w = num(el, '--w');
+        return w < 1000 && x + w / 2 > 250 && x + w / 2 < 950;
+      });
+      const flow = [
+        ...items.map((it) => ({ ...it, caption: true })),
+        ...central.map((el) => ({ el, y: num(el, '--y'), h: layerH(el), caption: false })),
+      ].sort((a, b) => a.y - b.y);
+      let allBottom = -Infinity, capBottom = -Infinity;
+      for (const item of flow) {
+        const shift = item.caption
+          ? Math.max(0, allBottom + CAPTION_GAP - item.y)
+          : Math.max(0, capBottom + CAPTION_GAP - item.y);
         if (shift) item.el.style.setProperty('--dy', shift.toFixed(1));
-        bottom = item.y + shift + item.h;
+        const bottomNow = item.y + shift + item.h;
+        allBottom = Math.max(allBottom, bottomNow);
+        if (item.caption) {
+          capBottom = bottomNow;
+          const it = items.find((i) => i.el === item.el);
+          it.bottom = bottomNow;
+        }
       }
-      const height = parseFloat(scene.style.getPropertyValue('--h')) || 0;
-      if (bottom + 40 > height) scene.style.setProperty('--dh', (bottom + 40 - height).toFixed(1));
+      let sceneBottom = allBottom;
+
+      // 2. Остальные картинки, стоявшие в макете под текстом, сдвигаем вниз
+      //    вслед за выросшим текстом. Фон сцены не двигаем.
+      for (const el of layers) {
+        if (el.classList.contains('bg') || el.querySelector('.caption') || central.includes(el)) continue;
+        const y = num(el, '--y');
+        let dy = 0;
+        for (const item of items) {
+          const originalBottom = item.y + item.h0;
+          if (y >= originalBottom - 10) dy = Math.max(dy, item.bottom + CAPTION_GAP - originalBottom);
+        }
+        if (dy > 0) {
+          el.style.setProperty('--dy', dy.toFixed(1));
+          sceneBottom = Math.max(sceneBottom, y + dy + layerH(el));
+        }
+      }
+
+      const height = num(scene, '--h');
+      if (sceneBottom + 40 > height) scene.style.setProperty('--dh', (sceneBottom + 40 - height).toFixed(1));
     }
   }
 
@@ -107,6 +161,7 @@
       offset: config.offset || 0,
       trigger: config.trigger || 0,
       steps: prepareSteps(config.steps),
+      text: !!el.querySelector('.caption'),
       last: '',
     };
   });
@@ -131,9 +186,18 @@
     return line;
   }
 
+  // Телефон: узкий экран. Там триггеры анимаций считаются от высоты экрана,
+  // а сглаживание прокрутки выключено (у телефона своя инерция).
+  let phone = false;
+
   function measure() {
     unit = root.clientWidth / DESIGN_WIDTH;
     viewH = window.innerHeight;
+    // Отдельная мобильная раскладка выключена: на телефоне показываем
+    // ту же вёрстку, что на компьютере, и просим повернуть телефон.
+    // Чтобы включить её обратно, поставь MOBILE_LAYOUT = true.
+    phone = MOBILE_LAYOUT && root.clientWidth < 760;
+    root.classList.toggle('phone', phone);
     root.style.setProperty('--u', unit + 'px');
     fitCaptions();
 
@@ -143,7 +207,14 @@
 
     for (const layer of scrollLayers) {
       const top = sceneTop.get(layer.scene) + layerY(layer.el) * unit;
-      layer.line = triggerLine(layer.offset * unit, layer.trigger, top);
+      const pinned = layer.steps.some((step) => step.pin);
+      // На телефоне экран вмещает намного больше макета по высоте, поэтому
+      // появление/исчезание без «прилипания» считаем в долях экрана —
+      // иначе текст проявляется, когда его уже пролистали.
+      const offsetPx = phone && !pinned
+        ? Math.min(layer.offset * viewH / 750, viewH * 0.85)
+        : layer.offset * unit;
+      layer.line = triggerLine(offsetPx, layer.trigger, top);
       let position = top;
       let unpinned = 0;
       for (const step of layer.steps) {
@@ -177,7 +248,7 @@
   function update(now = performance.now()) {
     const scrollTop = Math.max(0, window.scrollY);
 
-    if (easedTop === null || !SMOOTHING || reducedMotion.matches) {
+    if (easedTop === null || !SMOOTHING || phone || reducedMotion.matches) {
       easedTop = scrollTop;
     } else {
       const dt = settled ? 1 / 60 : Math.min(0.05, (now - lastFrame) / 1000);
@@ -188,6 +259,14 @@
     settled = easedTop === scrollTop;
 
     for (const layer of scrollLayers) {
+      // На телефоне тексты не анимируются: стоят на месте и всегда видны
+      if (phone && layer.text) {
+        if (layer.last !== 'static') {
+          layer.last = 'static';
+          layer.fx.removeAttribute('style');
+        }
+        continue;
+      }
       const at = scrollTop + layer.line; // настоящая прокрутка: закрепление слоя
       const eased = easedTop + layer.line; // сглаженная: всё, что анимируется
       let x = 0, y = 0, scale = 1, rotate = 0, opacity = 1;
@@ -273,18 +352,33 @@
   );
   scenes.forEach((scene) => nearObserver.observe(scene));
 
-  /* ---------- Появление ---------- */
-  for (const el of document.querySelectorAll('[data-in]')) {
-    const margin = Math.round((parseFloat(el.dataset.inOffset) || 0) * Math.min(1, unit));
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (!entries.some((entry) => entry.isIntersecting)) return;
+  /* ---------- Появление ----------
+     Слой проявляется, когда заходит на экран. На телефоне — как только
+     показался на 10% снизу, на компьютере — с отступом из макета. */
+  let revealObservers = [];
+  function setupReveal() {
+    revealObservers.forEach((observer) => observer.disconnect());
+    revealObservers = [];
+    for (const el of document.querySelectorAll('[data-in]:not(.in)')) {
+      // на телефоне тексты появляются сразу, без анимации
+      if (phone && el.querySelector('.caption')) {
         el.classList.add('in');
-        observer.disconnect();
-      },
-      { rootMargin: `0px 0px -${margin}px 0px` }
-    );
-    observer.observe(el);
+        continue;
+      }
+      const margin = phone
+        ? Math.round(viewH * 0.1)
+        : Math.round((parseFloat(el.dataset.inOffset) || 0) * Math.min(1, unit));
+      const observer = new IntersectionObserver(
+        (entries) => {
+          if (!entries.some((entry) => entry.isIntersecting)) return;
+          el.classList.add('in');
+          observer.disconnect();
+        },
+        { rootMargin: `0px 0px -${margin}px 0px` }
+      );
+      observer.observe(el);
+      revealObservers.push(observer);
+    }
   }
 
   /* ---------- Текст с обводкой ----------
@@ -352,16 +446,119 @@
     caption.classList.add('drawn');
   });
 
+  /* ---------- Текст в стиле лонгрида вне сцен (.tv-text) ----------
+     Рисуем SVG-контуры как у .caption, но в настоящих пикселях:
+     data-size — кегль, обводка и подложка пропорциональны ему. */
+  function drawTvText(el) {
+    const size = parseFloat(el.dataset.size) || 24;
+    el.style.fontSize = size + 'px';
+    el.querySelector('svg')?.remove();
+    // исходные строки запоминаем один раз, до того как в блок добавится SVG
+    if (!el.dataset.lines) {
+      el.dataset.lines = JSON.stringify(el.innerHTML.split(/<br\s*\/?>/i).map((part) => {
+        const tmp = document.createElement('div');
+        tmp.innerHTML = part;
+        return tmp.textContent.trim();
+      }));
+    }
+    const lines = JSON.parse(el.dataset.lines);
+    const lineHeight = size * 1.21;
+    const svg = document.createElementNS(SVG_NS, 'svg');
+    svg.setAttribute('aria-hidden', 'true');
+    svg.setAttribute('width', '100%');
+    svg.setAttribute('height', '100%');
+    const id = 'tv-' + Math.random().toString(36).slice(2, 8);
+    const group = document.createElementNS(SVG_NS, 'g');
+    group.id = id;
+    lines.forEach((line, i) => {
+      const text = document.createElementNS(SVG_NS, 'text');
+      text.setAttribute('x', '50%');
+      text.setAttribute('y', (i * lineHeight + (lineHeight - 1.21 * size) / 2 + 0.96875 * size + 0.12 * size).toFixed(2));
+      text.setAttribute('font-size', size);
+      text.style.fontFamily = 'inherit';
+      text.textContent = line;
+      group.append(text);
+    });
+    const defs = document.createElementNS(SVG_NS, 'defs');
+    defs.append(group);
+    svg.append(defs);
+    const widths = { halo: (9.4 / 24) * size * 2, stroke: (3.1 / 24) * size * 2, ink: 0 };
+    for (const layer of ['halo', 'stroke', 'ink']) {
+      const use = document.createElementNS(SVG_NS, 'use');
+      use.setAttribute('class', layer);
+      use.setAttribute('href', '#' + id);
+      if (widths[layer]) use.setAttribute('stroke-width', widths[layer].toFixed(2));
+      svg.append(use);
+    }
+    el.prepend(svg);
+    el.classList.add('drawn');
+  }
+
+  function setTvText(el, text) {
+    el.textContent = text;
+    el.dataset.lines = JSON.stringify([text]);
+    drawTvText(el);
+  }
+
+  document.querySelectorAll('.tv-text').forEach(drawTvText);
+  if (document.fonts) document.fonts.ready.then(() => document.querySelectorAll('.tv-text').forEach(drawTvText));
+
+  /* ---------- Экран загрузки ----------
+     Сначала грузим все картинки и только потом показываем страницу,
+     чтобы при прокрутке ничего не догружалось и не выскакивало.
+     Если какая-то картинка не грузится дольше LOADER_TIMEOUT, страница
+     всё равно откроется. */
+  const LOADER_TIMEOUT = 25000;
+  function preloadImages() {
+    const loader = document.getElementById('loader');
+    const pct = loader && loader.querySelector('.loader-pct');
+    const images = [...document.images];
+    images.forEach((img) => { img.loading = 'eager'; });
+    let done = 0;
+    const show = () => {
+      const p = images.length ? done / images.length : 1;
+      if (pct) setTvText(pct, Math.round(p * 100) + '%');
+    };
+    const waits = images.map((img) => new Promise((resolve) => {
+      const finish = () => { done++; show(); resolve(); };
+      if (img.complete) return finish();
+      img.addEventListener('load', finish, { once: true });
+      img.addEventListener('error', finish, { once: true });
+    }));
+    show();
+    const fonts = document.fonts ? document.fonts.ready : Promise.resolve();
+    const timeout = new Promise((resolve) => setTimeout(resolve, LOADER_TIMEOUT));
+    return Promise.race([Promise.all([...waits, fonts]), timeout]);
+  }
+
   /* ---------- Запуск ---------- */
-  refresh();
-  window.addEventListener('scroll', requestUpdate, { passive: true });
-  window.addEventListener('resize', refresh);
-  window.addEventListener('load', refresh);
   let lastWidth = root.clientWidth;
+  refresh();
+  setupReveal();
+  preloadImages().then(() => {
+    window.scrollTo(0, 0);
+    refresh();
+    root.classList.remove('loading');
+    const loader = document.getElementById('loader');
+    if (loader) {
+      loader.classList.add('done');
+      setTimeout(() => loader.remove(), 700);
+    }
+  });
+  window.addEventListener('scroll', requestUpdate, { passive: true });
+  window.addEventListener('load', refresh);
+  // На телефоне панель браузера при прокрутке то прячется, то появляется,
+  // меняя высоту окна. Полностью пересчитываем всё только при смене ширины,
+  // иначе закреплённые слои «прыгают».
+  window.addEventListener('resize', () => {
+    if (root.clientWidth !== lastWidth) return; // это обработает ResizeObserver
+    if (!phone) refresh();
+  });
   new ResizeObserver(() => {
     // реагируем только на смену ширины: высота меняется и от наших же правок
     if (root.clientWidth === lastWidth) return;
     lastWidth = root.clientWidth;
     refresh();
+    setupReveal();
   }).observe(root);
 })();

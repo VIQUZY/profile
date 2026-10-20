@@ -34,6 +34,7 @@
   --paper: #f5f5f5;
   --grid-color: transparent;          /* сетка скрыта; вернуть — поставь #e5ebf4 */             /* голубая сетка; убрать — поставь transparent */
   --ease: cubic-bezier(.65, 0, .25, 1);
+  --ls: .012em;                      /* межбуквенный интервал: добавка ко всем текстам (≈ +10%) */
   --line-gray: #949494;              /* серый, как светло-серый текст */
 }
 
@@ -58,7 +59,7 @@ h1, h2, h3, p, ul, ol { font: inherit; padding: 0; list-style: none; }
 
 .page {
   --u: calc(100vw / 1200);
-  --f-name: 30; --f-big: 46; --f-text: 20; --f-desc: 13.5; --f-small: 15;
+  --f-name: 33; --f-big: 50.6; --f-text: 22; --f-desc: 15; --f-small: 16.5;   /* размеры текста (+10%) */
   --gm: 50; --gc: 128.75; --gp: 138.75; --gw: 1100;
   --c2: calc(267.5 * var(--u));      /* 2 колонки */
   --c3: calc(406.25 * var(--u));     /* 3 колонки */
@@ -101,12 +102,12 @@ h1, h2, h3, p, ul, ol { font: inherit; padding: 0; list-style: none; }
 
 /* --- типографика ---------------------------------------------------------- */
 
-.t-name, .t-head, .t-lead, .t-mute, .t-small, .t-desc { letter-spacing: calc(-0.8 * var(--u)); }
+.t-name, .t-head, .t-lead, .t-mute, .t-small, .t-desc { letter-spacing: calc(-0.8 * var(--u) + var(--ls)); }
 .t-name  { font-size: calc(var(--f-name) * var(--u)); font-weight: 600; line-height: 1; }
 .t-head  { font-size: calc(var(--f-text) * var(--u)); font-weight: 600; line-height: 1.1; }
 .t-lead  { font-size: calc(var(--f-text) * var(--u)); font-weight: 500; line-height: 1.1; }
 .t-mute  { font-size: calc(var(--f-text) * var(--u)); font-weight: 400; line-height: 1.1; opacity: .5; }
-.t-small { font-size: calc(var(--f-small) * var(--u)); font-weight: 400; line-height: 1; letter-spacing: calc(-0.5 * var(--u)); font-variant-numeric: tabular-nums; }
+.t-small { font-size: calc(var(--f-small) * var(--u)); font-weight: 400; line-height: 1; letter-spacing: calc(-0.5 * var(--u) + var(--ls)); font-variant-numeric: tabular-nums; }
 .t-desc  { font-size: calc(var(--f-desc) * var(--u)); line-height: 1.25; }
 .t-desc .lead { font-weight: 500; }
 .t-desc .mute { font-weight: 400; opacity: .5; }
@@ -117,9 +118,9 @@ h1, h2, h3, p, ul, ol { font: inherit; padding: 0; list-style: none; }
 /* --- шапка ---------------------------------------------------------------- */
 
 .logo { position: absolute; top: calc(23 * var(--u)); left: calc(50 * var(--u)); display: flex; align-items: flex-start; }
-.logo .sup { font-size: calc(var(--f-text) * var(--u)); font-weight: 500; opacity: .5; margin: calc(-8 * var(--u)) 0 0 calc(1 * var(--u)); letter-spacing: calc(-0.8 * var(--u)); }
+.logo .sup { font-size: calc(var(--f-text) * var(--u)); font-weight: 500; opacity: .5; margin: calc(-8 * var(--u)) 0 0 calc(1 * var(--u)); letter-spacing: calc(-0.8 * var(--u) + var(--ls)); }
 .logo a:hover { opacity: .5; }
-.girl { position: absolute; left: calc(525 * var(--u)); top: calc(-2.6 * var(--u)); width: calc(50 * var(--u)); }   /* по центру страницы */
+.girl { position: absolute; left: calc(1050 * var(--u)); top: calc(-2.6 * var(--u)); width: calc(50 * var(--u)); }   /* девочка — в правом углу, по правому краю сетки */
 .girl svg { display: block; width: 100%; height: auto; color: #000; }
 /* подмигивание: правый глаз на миг закрывается (рисунок из твоего SVG) */
 .girl .eye-wink { opacity: 0; }
@@ -190,7 +191,7 @@ h1, h2, h3, p, ul, ol { font: inherit; padding: 0; list-style: none; }
   font-size: calc(var(--f-big) * var(--u));
   font-weight: 600;
   line-height: .95;
-  letter-spacing: -.035em;
+  letter-spacing: calc(-.035em + var(--ls));
   transition: opacity .3s, font-size .5s var(--ease);
 }
 .strip__kind { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: opacity .3s; }
@@ -220,10 +221,10 @@ h1, h2, h3, p, ul, ol { font: inherit; padding: 0; list-style: none; }
 .page .strips.has-open .strip:not(.is-open) .strip__num { opacity: .5; transition: opacity .3s ease; }
 .page .strips.has-open .strip:not(.is-open) .strip__face:hover .strip__num,
 .page .strips.has-open .strip.is-hot:not(.is-open) .strip__num { opacity: 1; }
-.side__title { margin: 0; letter-spacing: calc(-0.8 * var(--u)); }
+.side__title { margin: 0; letter-spacing: calc(-0.8 * var(--u) + var(--ls)); }
 /* «читать лонгрид»: тёмная плашка, как подвал; при наведении — светлая с чёрной рамкой */
 .t-desc a.read-bar {
-  display: flex; justify-content: space-between; align-items: center;
+  display: flex; justify-content: flex-start; align-items: center;
   margin: calc(24 * var(--u)) 0;
   padding: calc(12 * var(--u)) calc(12 * var(--u));
   background: var(--ink); color: var(--paper);
@@ -231,7 +232,17 @@ h1, h2, h3, p, ul, ol { font: inherit; padding: 0; list-style: none; }
   font-weight: 600; text-decoration: none;
   transition: background-color .25s ease, color .25s ease;
 }
-.read-bar__arrow { transition: transform .3s var(--ease); }
+.read-bar__arrow { display: inline-flex; transition: transform .3s var(--ease); }
+.read-bar__arrow .chev { width: .9em; height: .75em; display: block; }
+.read-bar--end { display: none !important; }
+@media (max-width: 699px) {
+  .body__side .read-bar { display: none !important; }
+  .body__flow a.read-bar--end {
+    display: flex !important; grid-column: 1 / -1; justify-content: space-between; align-items: center;
+    margin-top: calc(10 * var(--u)); padding: calc(12 * var(--u)); background: var(--ink); color: var(--paper);
+    border: var(--rule) solid var(--ink); font-size: calc(var(--f-desc) * var(--u)); font-weight: 600; text-decoration: none;
+  }
+}
 .t-desc a.read-bar:hover { opacity: 1; background: transparent; color: var(--ink); }
 .read-bar:hover .read-bar__arrow { transform: translateX(calc(4 * var(--u))); }
 .side__top { display: flex; justify-content: space-between; align-items: flex-start; }
@@ -313,7 +324,7 @@ h1, h2, h3, p, ul, ol { font: inherit; padding: 0; list-style: none; }
 }
 .body__num { grid-column: 1; }
 .strip__num, .body__num, .num { opacity: .5; font-style: italic; font-weight: 600; }   /* номера серые, как серый текст */
-.body__title { grid-column: 1 / span 2; grid-row: 2; margin-top: calc(40 * var(--u)); letter-spacing: calc(-0.8 * var(--u)); }
+.body__title { grid-column: 1 / span 2; grid-row: 2; margin-top: calc(40 * var(--u)); letter-spacing: calc(-0.8 * var(--u) + var(--ls)); }
 .body__title:empty { display: none; }
 .body__close { grid-column: -2 / -1; grid-row: 1; justify-self: end; font-size: calc(28 * var(--u)); line-height: .6; font-weight: 400; }
 @media (min-width: 700px) {
@@ -403,6 +414,37 @@ h1, h2, h3, p, ul, ol { font: inherit; padding: 0; list-style: none; }
   to   { transform: translate(calc(12 * var(--u)), calc(-16 * var(--u))) rotate(2deg); }
 }
 .body__side .col2 { margin-left: calc(138.75 * var(--u)); }
+/* направления — в два столбика по сетке */
+.dirs { display: grid; grid-template-columns: repeat(2, calc(128.75 * var(--u))); column-gap: var(--gap); }
+.dirs p { margin: 0 !important; }
+.keep-case { text-transform: none; }
+/* главная, компьютер: текст о себе сразу под направлениями, alumni и контакт — внизу */
+@media (min-width: 700px) {
+  .strip--me .body__side { justify-content: flex-start !important; }
+  .strip--me .me__text { display: contents; }
+  .strip--me .me__text > p.lead { margin-top: calc(48 * var(--u)) !important; }
+  .strip--me .me__foot { margin-top: auto !important; }
+}
+/* последняя строка «обо мне»: alumni и контакт — два столбика по сетке */
+.me__foot { display: grid; grid-template-columns: repeat(2, calc(128.75 * var(--u))); column-gap: var(--gap); align-items: last baseline; margin-top: .9em; }
+.me__foot p { margin: 0 !important; }
+.tg-link { display: inline-flex; align-items: center; gap: .3em; color: var(--ink); text-decoration: none; }
+.tg-link:hover { opacity: .5; }
+.tg { width: 1em; height: 1em; flex: none; }
+@media (max-width: 699px) {
+  .me__foot { grid-template-columns: 1fr calc(116 * var(--u)); }   /* правый столбик ближе к краю */
+  .page { --rule: calc(1.6 * var(--u)); }                       /* линии на телефоне на 20% тоньше */
+  .strip--me .body__head { padding: 0; }
+  .strip--me .body__grid { padding-top: calc(16 * var(--u)) !important; }
+  .strip--me .body__side { display: flex; flex-direction: column; gap: calc(14 * var(--u)); }
+  .strip--me .body__side > *, .strip--me .me__text > p { margin: 0 !important; }
+  .strip--me .me__text { display: flex; flex-direction: column; gap: calc(14 * var(--u)); }
+  .strip--me .stage { margin-top: 0 !important; }
+  .body__side .side__date { margin: calc(4 * var(--u)) 0 calc(14 * var(--u)) !important; }
+  .strip:not(.strip--me) .body__grid { padding-top: calc(8 * var(--u)) !important; }
+  .strip--me .me__foot { margin-top: 0; }
+}
+@media (min-width: 700px) { .strip--me .dirs { margin-top: calc(-42 * var(--u)); } }   /* на одной линии с номерами 01–04 */
 .me__aside { grid-column: 3 / span 2; grid-row: 2; display: grid; grid-template-columns: repeat(2, calc(128.75 * var(--u))); column-gap: var(--gap); align-items: start; margin-top: calc(30 * var(--u)); }
 .me__aside img { width: 100%; }
 .strip--me .body__side { grid-row: 1 / span 2; }
@@ -431,7 +473,7 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--ink); outline-o
 @media (max-width: 699px) {
   .page {
     --u: calc(100vw / 320);
-    --f-name: 15; --f-big: 15; --f-text: 11; --f-desc: 11; --f-small: 9;
+    --f-name: 16.5; --f-big: 16.5; --f-text: 12; --f-desc: 12; --f-small: 10;
     --gm: 10; --gc: 60; --gp: 80; --gw: 300;
     --gap: calc(20 * var(--u));
     position: relative;
@@ -448,7 +490,7 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--ink); outline-o
   .logo { position: static; padding: calc(15 * var(--u)) calc(10 * var(--u)) 0; }
   .nav { top: calc(19 * var(--u)); left: auto; right: calc(10 * var(--u)); width: auto; gap: calc(14 * var(--u)); }
 
-  .strips { position: static; width: auto; display: flex; flex-direction: column; margin: calc(30 * var(--u)) calc(10 * var(--u)) calc(40 * var(--u)); }
+  .strips { position: static; width: auto; display: flex; flex-direction: column; margin: calc(12 * var(--u)) calc(10 * var(--u)) calc(40 * var(--u)); }
   .strips .strip.is-open { order: -1; }
   .page .strips .strip { flex: none !important; width: 100%; }                       /* открытый проект — первым, остальные строками под ним */
   .strip, .strips .strip { margin: 0; }
@@ -478,7 +520,7 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--ink); outline-o
   .strip__kind, .strip__img, .strip__icon { display: none; }
   .strips.me-open .strip__titlebox { margin: 0; }
   .strips.me-open .strip__icon { display: none; }
-  .girl { position: relative; left: auto; top: auto; width: calc(28 * var(--u)); margin: calc(-8 * var(--u)) 0 0 calc(6 * var(--u)); }
+  .girl { position: relative; left: auto; top: auto; width: calc(28 * var(--u)); margin: calc(-4 * var(--u)) 0 0 auto; }
   .body__side .icons { grid-template-columns: calc(40 * var(--u)); }
   .strips.has-open .strip__title, .strips.me-open .strip__title { font-size: calc(var(--f-big) * var(--u)); }
   .strips.has-open .strip__year, .strips.me-open .strip__year { opacity: 1; }
@@ -515,7 +557,8 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--ink); outline-o
 @media (min-width: 700px) {
   /* без прокрутки: так Safari растворяет фон блокнота и сетка проходит сквозь него */
   .strip--me .strip__body { overflow: visible; display: flex; flex-direction: column; }
-  .strip--me .body__grid { flex: 1; min-height: 0; grid-template-rows: 1fr; align-items: stretch; padding: calc(24 * var(--u)) 0 calc(20 * var(--u)); }
+  .strip--me .body__grid { flex: 1; min-height: 0; grid-template-rows: 1fr; align-items: stretch; padding: calc(24 * var(--u)) 0 0; }
+  .strip--me .body__side { margin-bottom: calc(-4 * var(--u)); }   /* базовая линия «alumni 2026» = низ иконок справа */
   .strip--me .body__side { grid-row: 1; position: static; display: flex; flex-direction: column; justify-content: space-between; }
   .strip--me .stage { grid-row: 1; height: auto; margin-top: 0; }
 }
@@ -619,7 +662,7 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--ink); outline-o
   padding-bottom: calc(10 * var(--k));
   width: max-content; white-space: nowrap;   /* длинное название — в две строки после запятой */
   font-size: calc(30 * var(--k)); line-height: 1.1; font-weight: 600;
-  letter-spacing: -.02em; color: var(--ink);
+  letter-spacing: calc(-.02em + var(--ls)); color: var(--ink);
 }
 .nb-proj__label, .nb-proj__num { font-style: normal; }
 .nb-proj--below .nb-proj__label { bottom: auto; top: 100%; padding: calc(10 * var(--k)) 0 0; }
@@ -645,6 +688,11 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--ink); outline-o
   transform: translateZ(calc(22 * var(--k))) translateX(calc(48 * var(--k)));   /* выдвигается, но край остаётся в блокноте */
 }
 .nb-book:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+/* наведение на «написать мне» тоже выдвигает бумажку */
+.nb .nb-page:has(.nb-write:hover, .nb-write:focus-visible) ~ .nb-book {
+  transform: translateZ(calc(22 * var(--k))) translateX(calc(48 * var(--k)));
+}
+.nb-write { cursor: pointer; }
 /* рукописное «написать мне ↓» у правого края разворота — указывает на бумажку */
 .nb-write {
   position: absolute; display: none;
@@ -673,7 +721,8 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--ink); outline-o
   .page .strips .strip__face:hover { background: none; color: var(--ink); }
   /* главная: отступ между направлениями и текстом, блокнот по центру */
   .strip--me .body__side > .mute:first-child { margin-bottom: calc(20 * var(--u)); }
-  .strip--me .stage { width: 100%; height: calc(320 * var(--u)) !important; margin: calc(10 * var(--u)) 0 0 !important; }
+  .dirs { grid-template-columns: 1fr calc(116 * var(--u)); }
+  .strip--me .stage { width: 100%; height: calc(320 * var(--u)) !important; margin: calc(10 * var(--u)) 0 calc(44 * var(--u)) !important; }
   /* проект: без лишнего отступа сверху, картинки во всю ширину */
   .strip:not(.strip--me) .body__head { display: none; }
   .strip:not(.strip--me) .body__grid { padding: calc(16 * var(--u)) 0 calc(10 * var(--u)); }
@@ -704,7 +753,7 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--ink); outline-o
   <main class="strips is-home" id="strips" aria-label="Проекты"></main>
 
   <footer class="bar t-small" id="contact">
-    <p class="bar__open">freelance / commission — open.</p>
+    <p class="bar__open">freelance / commission — open</p>
     <p class="bar__links">
       <a href="https://t.me/viquzy" target="_blank" rel="noopener">тгк</a>
       <a href="https://ru.pinterest.com/viquzy/" target="_blank" rel="noopener">пинтерест</a>
@@ -732,22 +781,24 @@ var PROJECTS = [
     pos: { l: '4%', t: '20%', w: '34%', r: '-4deg' },
     desc: [
       ['lead', 'суеверник — выставка суеверий, которая представляет собой систематизированный подход к изучению культурного феномена суеверий через материальные объекты.'],
-      ['mute', 'визуальное обобщение (декоративная текстура) превращает вилку, солонку, зеркало и другие объекты в своеобразные артефакты, существующие в своей вселенной.'],
-      ['lead', 'предметы «выпадают» из быта и становятся частью культурного феномена — коллекции верований и ритуалов, которыми люди наполнили окружающие вещи.']
+      ['mute', 'проект начинался как онлайн-исследование. в pinterest контент проекта набрал 2,89 млн показов и 25 тыс. сохранений.'],
+      ['lead', 'сейчас готовится выставка в первом музее славянской мифологии в {Томске}.'],
+      ['mute', 'параллельно в работе маленькая книга о суевериях. её мы делаем вместе с издательством {АСТ}.']
     ],
     images: [
-      'tild6637-6465-4464-a662-363366383638/Slide_16_9_-_95.png',
-      'tild3063-3863-4463-b663-353937656538/__2025-12-24__131645.png',
       'tild3234-3235-4763-b063-636335336433/0627.gif',
-      'tild6562-6663-4134-b364-363830323239/Slide_16_9_-_111.png',
-      'tild6235-6138-4637-b238-303336633965/Slide_16_9_-_98.png',
-      'tild6637-3735-4135-b661-366336393533/__2025-12-24__131853.png',
-      'tild3533-6638-4765-a535-303631323934/Slide_16_9_-_94.png',
-      'tild6362-3763-4336-b138-643462663233/Slide_16_9_-_99.png',
+      'img/suevernik/n01.webp',
+      'tild3063-3863-4463-b663-353937656538/__2025-12-24__131645.png',
+      'img/suevernik/n02.webp',
+      'img/suevernik/n03.webp',
+      'img/suevernik/n04.webp',
+      'img/suevernik/n05.webp',
       'tild6130-3133-4661-b030-383834656133/Slide_16_9_-_101.png',
       'tild6662-6632-4332-b139-626134396538/Slide_16_9_-_102.png',
-      'tild3231-6432-4737-a432-356130333338/Slide_16_9_-_108.png',
-      'tild6438-6234-4962-b864-303465643865/Slide_16_9_-_125.png'
+      'img/suevernik/n06.webp',
+      'tild6362-3763-4336-b138-643462663233/Slide_16_9_-_99.png',
+      'img/suevernik/n08.webp',
+      'img/suevernik/n07.webp'
     ]
   },
   {
@@ -756,17 +807,35 @@ var PROJECTS = [
     icons: [STEPASHKA_IMG],
     desc: [
       ['lead', 'степашка — герой бренда аксессуаров в виде недовольных ромашек. дипломный проект в школе дизайна вшэ, который вырос в настоящий бренд.'],
-      ['mute', 'вокруг персонажа собрана медиасистема: зин, лендинг, соцсети, стикеры и мерч.']
+      ['mute', 'вокруг персонажа собрана медиасистема: соцсети, стикеры и мерч.'],
+      ['order', 'заказать степашку', '@iamviquzy', 'https://t.me/iamviquzy'],
+      ['link', 'подробнее о проекте', 'https://hsedesign.ru/project/nakl-pki-22d28cfabffc4f86828cf92af5ff58e5']
     ],
     images: [
-      'img/stepashka/00.webp',
-      'img/stepashka/01.webp', 'img/stepashka/02.webp', 'img/stepashka/03.webp',
-      'img/stepashka/04.webp', 'img/stepashka/05.webp', 'img/stepashka/06.webp',
-      'img/stepashka/07.webp', 'img/stepashka/08.webp', 'img/stepashka/09.webp'
+      'img/stepashka/n03.webp',
+      'img/stepashka/n04.webp',
+      'img/stepashka/04.webp',
+      'img/stepashka/07.webp',
+      'img/stepashka/08.webp',
+      'img/stepashka/n01.webp',
+      'img/stepashka/02.webp',
+      'img/stepashka/01.webp',
+      'img/stepashka/03.webp',
+      'img/stepashka/05.webp',
+      'img/stepashka/06.webp',
+      'img/stepashka/09.webp',
+      'img/stepashka/n05.webp',
+      'img/stepashka/n06.webp',
+      'img/stepashka/n08.webp',
+      'img/stepashka/n09.webp',
+      'img/stepashka/n13.webp',
+      'img/stepashka/n11.webp',
+      'img/stepashka/n10.webp',
+      'img/stepashka/n07.webp'
     ]
   },
   {
-    id: 'birch', num: '03', title: 'фестиваль берёзового сока', kind: 'branding & identity',
+    id: 'birch', num: '03', title: 'берёзафест', kind: 'branding & identity',
     foot: ['©2025', 'branding. identity.'],
     icons: ['tild3130-6333-4438-b165-633836343339/MacBook_Air_-_12.png', 'tild3437-6132-4538-b737-376437313964/Group_49.png', 'tild6539-3138-4364-a632-653936316232/MacBook_Air_-_14.png'],
     pos: { l: '44%', t: '54%', w: '30%', r: '-2deg' },
@@ -780,33 +849,31 @@ var PROJECTS = [
       'tild6133-3534-4363-b065-306565623465/4f342ade46014aba9e53.jpg',
       'tild6433-6632-4163-a231-373132366661/7294974949e64a088d7c.jpg',
       'tild6663-6532-4139-a330-613638353663/a2101c54e58e415ba209.jpg',
-      'tild3635-3430-4063-b664-306539333864/e6bc3fccd62d4886a42e.jpg',
-      'tild6638-6463-4466-b463-656335303732/63138dbff93e4a1391ee.jpg',
       'tild6637-6635-4934-a134-323566313835/e22fb05746cf4359acf8.jpg'
     ]
   },
   {
-    id: 'longread', num: '04', title: 'в детстве я боялась, что меня украдут они', short: 'украдут они', kind: 'longread',
-    foot: ['©2025', 'longread. performance. ai.'],
+    id: 'longread', num: '04', title: 'я боялась, что меня украдут они', short: 'украдут они', kind: 'longread',
+    foot: ['©2026', 'longread. performance. ai.'],
     icons: ['tild6238-3630-4036-a530-383730323866/runEu0DtKgChAE-Scene.gif', 'tild3831-3130-4163-b163-313139303566/Group_47.png'],
     pos: { l: '6%', t: '64%', w: '24%', r: '3deg' },
     desc: [
-      ['lead', 'айсберг моих детских психотравм — это персонажи тв программ 2000х. этому феномену я посвятила лонгрид.'],
+      ['lead', 'айсберг моих детских психотравм — это персонажи телепрограмм 2000-х. этому феномену я посвятила лонгрид.'],
       ['mute', 'разобрала сцены, заставки и персонажей, которые остались в моей памяти детским кошмаром.'],
-      ['link', 'читать лонгрид', 'tv2000/index.html', 'tild6463-6333-4761-b230-303435356530/4561c0b7-39b2-48d5-8.png']
+      ['lead', 'лонгрид можно прочитать целиком.'],
+      ['link', 'читать лонгрид', 'tv2000/tv2000.html', 'tild6463-6333-4761-b230-303435356530/4561c0b7-39b2-48d5-8.png']
     ],
     images: [
-      'tild6563-6532-4065-a361-353265393732/2.gif',
-      'tild6463-6333-4761-b230-303435356530/4561c0b7-39b2-48d5-8.png',
-      'tild3334-3362-4730-b739-636166646437/0b4205f8-150f-481d-8.jpg',
-      'tild3536-6537-4132-b263-383863303531/1.gif',
-      'tild6631-3739-4565-b062-313634663132/896d5a62-67ec-43e3-b.gif',
-      'tild3437-3930-4035-a538-666466663463/3.gif',
-      'tild6438-6235-4263-b634-643335353933/0de7ac4e-abf5-472f-a.png',
+      'img/longread/n01.webp',
       'tild3930-6637-4163-a337-353464623162/4.gif',
-      'tild3064-6437-4834-b664-326563643037/6443fa3d-326a-4405-b.png',
+      'tild6463-6333-4761-b230-303435356530/4561c0b7-39b2-48d5-8.png',
+      'tild3437-3930-4035-a538-666466663463/3.gif',
+      'tild6631-3739-4565-b062-313634663132/896d5a62-67ec-43e3-b.gif',
+      'tild3536-6537-4132-b263-383863303531/1.gif',
+      'img/longread/n02.webp',
+      'img/longread/n03.webp',
       'tild6634-6238-4534-b864-306338383336/68774ad4-2b4c-49e1-a.png',
-      'tild3730-3739-4334-b433-373639353264/5.gif'
+      'tild6563-6532-4065-a361-353265393732/2.gif'
     ]
   }
 ];
@@ -841,7 +908,6 @@ strips.innerHTML =
       '<button type="button" class="strip__face" data-go="' + p.id + '" aria-label="' + p.num + ' ' + esc(p.title) + '" aria-controls="body-' + p.id + '" aria-expanded="false">' +
         '<span class="strip__top"><span class="strip__num t-small">' + p.num + '</span><span class="strip__year t-small">' + esc(p.foot[0]) + '</span></span>' +
         '<span class="strip__titlebox"><span class="strip__title">' + esc(p.title) + '</span></span>' +
-        '<span class="strip__kind t-mute">' + esc(p.kind) + '</span>' +
         '<img class="strip__icon" src="' + src(p.icons[0]) + '" alt="" loading="lazy">' +
         '<img class="strip__img" src="' + src(p.images[0]) + '" alt="" loading="lazy">' +
       '</button>' +
@@ -875,9 +941,10 @@ function head(num, title, closable, label) {
 function projectBody(p) {
   var i = PROJECTS.indexOf(p), next = PROJECTS[(i + 1) % PROJECTS.length];
   var desc = p.desc.map(function (d) {
+    if (d[0] === 'order') return '<p class="lead">' + esc(d[1]) + ' →\u00A0<a href="' + d[3] + '" target="_blank" rel="noopener">' + esc(d[2]) + '</a></p>';   // текст → ссылка
     if (d[0] === 'link') return '<a class="read-bar" href="' + d[2] + '" target="_blank" rel="noopener">' +
-      '<span>' + esc(d[1]) + '</span><span class="read-bar__arrow" aria-hidden="true">→</span></a>';
-    return '<p class="' + d[0] + '">' + esc(d[1]) + '</p>';
+      '<span>' + esc(d[1]) + '</span></a>';
+    return '<p class="' + d[0] + '">' + esc(d[1]).replace(/\{([^}]+)\}/g, '<span class="keep-case">$1</span>') + '</p>';   // {Слово} — без строчных
   }).join('');
   var imgs = p.images.map(function (s0, k) {
     var r = RHYTHM[k % RHYTHM.length];
@@ -890,8 +957,11 @@ function projectBody(p) {
         '<button type="button" class="body__close side__close" data-go="" aria-label="Закрыть, вернуться к me">×</button></div>' +
         '<h2 class="side__title t-name">' + esc(p.title) + '</h2>' +
         '<p class="side__date mute">' + esc(p.foot[0]) + '</p>' +
-        desc + '<div class="meta"><p class="mute">' + esc(p.foot[1]) + '</p></div></div>' +
+        desc + '</div>' +
       '<div class="body__flow">' + imgs +
+        p.desc.filter(function (d) { return d[0] === 'link'; }).map(function (d) {      // на телефоне кнопка — под последним слайдом
+          return '<a class="read-bar read-bar--end" href="' + d[2] + '" target="_blank" rel="noopener"><span>' + esc(d[1]) + '</span></a>';
+        }).join('') +
       '</div>' +
     '</div>';
 }
@@ -912,16 +982,17 @@ function meBody() {
   return head('', '', false) +
     '<div class="body__grid">' +
       '<div class="body__side t-desc">' +
-        '<p class="mute">branding<br>content<br>merch<br>art direction<br>performance<br>ai</p>' +
+        '<div class="mute dirs"><p>branding<br>content<br>merch</p><p>art direction<br>performance<br>ai</p></div>' +
         '<div class="me__text">' +
         '<p class="lead">мультидисциплинарный дизайнер. делаю айдентику, визуальные системы и концептуальные проекты — от исследования и идеи до готового носителя. открыта к сотрудничеству с брендами, культурными институциями и авторами.</p>' +
-        '<p class="mute col2">выпускница школы дизайна вшэ, профиль «медиа и дизайн».</p>' +
+        '<div class="me__foot"><p class="mute">hse design<br>alumni 2026</p>' +
+        '<p class="mute"><a class="tg-link" href="https://t.me/iamviquzy" target="_blank" rel="noopener"><svg class="tg" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M9.04 15.47 8.67 20.6c.53 0 .76-.23 1.04-.5l2.5-2.39 5.18 3.79c.95.52 1.62.25 1.88-.88l3.4-15.95c.31-1.43-.52-1.99-1.45-1.64L1.22 10.79c-1.37.53-1.35 1.3-.23 1.65l5.13 1.6L18.03 6.6c.56-.37 1.07-.17.65.2"/></svg>@iamviquzy</a></p></div>' +
         '</div>' +
       '</div>' +
       '<div class="stage">' +
         '<div class="nb-scene" role="img" aria-label="Блокнот с фотографиями: вращается, при наведении раскрывается"><div class="nb-wrap"><div class="nb">' +
           '<div class="nb-cover"><i class="f nb-front"></i><i class="f nb-inner">' + nbProjects() + '</i></div>' +
-          '<i class="f nb-page"><span class="nb-write" aria-hidden="true"></span></i><i class="f nb-back"></i>' +
+          '<i class="f nb-page"></i><i class="f nb-back"></i>' +
           '<i class="f nb-spine"></i><i class="f nb-edge"></i><i class="f nb-top"></i><i class="f nb-bottom"></i>' +
           '<i class="f nb-strip"></i><i class="f nb-strip-back"></i>' +
           '<a class="f nb-book" href="https://t.me/iamviquzy" target="_blank" rel="noopener" aria-label="Написать мне в телеграм @iamviquzy"></a><i class="f nb-book-back"></i>' +
@@ -934,9 +1005,13 @@ function meBody() {
 // после них ставится неразрывный пробел
 function noHanging(root) {
   var w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-  var re = /(^|[\s\u00A0(«])([а-яёa-z]{1,2})\s+/gi;
+  // короткие слова и союзы не висят в конце строки
+  var re = /(^|[\s\u00A0(«])([а-яёa-z]{1,2}|что|как|где|или|для|без|при|над|под|про|это|его|её|чтобы|когда|если|который|которые|которая)\s+/gi;
   for (var n = w.nextNode(); n; n = w.nextNode()) {
-    n.nodeValue = n.nodeValue.replace(re, '$1$2\u00A0').replace(re, '$1$2\u00A0').replace(/ —/g, '\u00A0—');   // и тире не переносится в начало строки
+    n.nodeValue = n.nodeValue.replace(re, '$1$2\u00A0').replace(re, '$1$2\u00A0')
+      .replace(/ —/g, '\u00A0—')                          // тире не переносится в начало строки
+      .replace(/(\d) (млн|тыс|млрд|%)/g, '$1\u00A0$2')     // число + единица вместе
+      .replace(/ ([а-яёa-z\d]{1,4}[.,!?…»]*)$/i, '\u00A0$1');                 // короткое последнее слово не остаётся одно
   }
 }
 
@@ -974,7 +1049,20 @@ function render(route) {
         flow.scrollTop = 0; flow.classList.remove('is-scrolled');
         if (!flow.dataset.watch) {
           flow.dataset.watch = '1';
-          flow.addEventListener('scroll', function () { flow.classList.toggle('is-scrolled', flow.scrollTop > 2); }, { passive: true });
+          var side = body.querySelector('.body__side');
+          flow.addEventListener('scroll', function () {
+            flow.classList.toggle('is-scrolled', flow.scrollTop > 2);
+            // текст стоит на месте; если он не влезает — догоняет плавно вместе с картинками
+            if (side && innerWidth >= 700) {
+              var fMax = flow.scrollHeight - flow.clientHeight, sMax = side.scrollHeight - side.clientHeight;
+              side.scrollTop = sMax > 0 && fMax > 0 ? sMax * flow.scrollTop / fMax : 0;
+            }
+          }, { passive: true });
+          body.addEventListener('wheel', function (e) {
+            if (innerWidth < 700 || flow.contains(e.target)) return;
+            e.preventDefault();
+            flow.scrollTop += e.deltaMode === 1 ? e.deltaY * 30 : e.deltaY;
+          }, { passive: false });
         }
       }
     } else body.setAttribute('inert', '');
@@ -1046,21 +1134,33 @@ function nbSetup(stage) {
     doOpen();
   };
   stage._nbClose = function () { doClose(); };
-  scene.addEventListener('pointerenter', function (e) { if (e.pointerType === 'mouse' && !open) { stage.classList.remove('nb-mode-contact'); doOpen(); } });
+  var mouseLike = matchMedia('(hover: hover) and (pointer: fine)').matches;   // на телефоне — только по нажатию
+  scene.addEventListener('pointerenter', function (e) { if (mouseLike && e.pointerType === 'mouse' && !open) { stage.classList.remove('nb-mode-contact'); doOpen(); } });
   function closeLater() {
     clearTimeout(stage._later);
     stage._later = setTimeout(doClose, 3000);
   }
-  stage.addEventListener('pointerleave', function (e) { if (e.pointerType === 'mouse' && stage._inside) closeLater(); });
+  stage.addEventListener('pointerleave', function (e) { if (mouseLike && e.pointerType === 'mouse' && stage._inside) closeLater(); });
   stage.addEventListener('pointermove', function (e) {        // закрыть, когда курсор ушёл с разворота
-    if (!open || e.pointerType !== 'mouse' || !stage.classList.contains('nb-open')) return;
+    if (!mouseLike || !open || e.pointerType !== 'mouse' || !stage.classList.contains('nb-open')) return;
     var b = scene.getBoundingClientRect(), kx = b.width / 751, ky = b.height / 1471;   // область разворота
     var inX = e.clientX > b.left + (310 - 640) * kx && e.clientX < b.left + (310 + 760) * kx;
     var inY = e.clientY > b.top + 70 * ky && e.clientY < b.bottom - 150 * ky;
     if (inX && inY) { stage._inside = true; clearTimeout(stage._later); return; }
     if (stage._inside) closeLater();                           // курсор ушёл с разворота — закрываем через 3 секунды
   });
-  scene.addEventListener('click', function (e) { if (e.target.closest('[data-go], a')) return; open ? doClose() : doOpen(); });
+  // нажатие, а не прокрутка: палец почти не сдвинулся и отпущен быстро
+  var tap = null;
+  scene.addEventListener('pointerdown', function (e) { tap = { x: e.clientX, y: e.clientY, t: Date.now(), sy: scrollY }; });
+  scene.addEventListener('pointercancel', function () { tap = null; });
+  scene.addEventListener('click', function (e) {
+    if (e.target.closest('[data-go], a')) return;
+    if (!mouseLike) {
+      if (!tap || Math.abs(e.clientX - tap.x) > 10 || Math.abs(e.clientY - tap.y) > 10 || Math.abs(scrollY - tap.sy) > 5 || Date.now() - tap.t > 500) { tap = null; return; }
+      tap = null;
+    }
+    open ? doClose() : doOpen();
+  });
 }
 
 function hot(id, on) {

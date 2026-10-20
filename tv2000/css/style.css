@@ -172,18 +172,19 @@ body {
 
   position: relative;
   isolation: isolate;
-  /* на телефоне текст крупнее (--cap-scale ставит js/main.js) */
-  transform: scale(var(--cap-scale, 1));
-  transform-origin: 50% 0;
+  /* на телефоне текст крупнее (--cap-scale ставит js/main.js). Блок
+     честно увеличивается, без transform: так Safari рисует текст чётко. */
+  width: calc(100% * var(--cap-scale, 1));
+  margin-left: calc((1 - var(--cap-scale, 1)) * 50%);
   /* колонка с выравниванием по центру: строка шире слоя
      выступает поровну в обе стороны */
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-top: calc(var(--pad) * var(--u));
+  padding-top: calc(var(--pad) * var(--u) * var(--cap-scale, 1));
   font-family: "Inter Display", "Inter", system-ui, sans-serif;
   font-weight: 500;
-  font-size: calc(var(--size) * var(--u));
+  font-size: calc(var(--size) * var(--u) * var(--cap-scale, 1));
   line-height: var(--leading);
   letter-spacing: var(--tracking);
   text-align: center;
@@ -330,6 +331,17 @@ body {
   animation: ticker var(--ticker-speed) linear infinite;
 }
 
+/* Бегущая строка — ссылка на телеграм-канал */
+a.ticker {
+  display: block;
+  cursor: pointer;
+}
+
+a.ticker:focus-visible {
+  outline: 3px solid #000;
+  outline-offset: -3px;
+}
+
 @keyframes ticker {
   to {
     background-position-x: calc(var(--ticker-w) * var(--u) * -1);
@@ -342,10 +354,191 @@ body {
   inset: 0;
   z-index: 99999999;
   pointer-events: none;
-  opacity: 0.15;
+  opacity: var(--noise, 0.09);
   background: #d00417 url("../images/noise.gif") repeat;
 }
 
+
+/* ---------- Просьба повернуть телефон ----------
+   Показывается на узком вертикальном экране. Повернул телефон — исчезла.
+*/
+.rotate {
+  display: none;
+}
+
+@media (orientation: portrait) and (max-width: 760px) {
+  .rotate {
+    position: fixed;
+    inset: 0;
+    z-index: 9999998;
+    display: grid;
+    place-items: center;
+    padding: 24px max(24px, env(safe-area-inset-right, 0px)) 24px max(24px, env(safe-area-inset-left, 0px));
+    background: #ff331a;
+  }
+
+  .rotate.skipped {
+    display: none;
+  }
+
+  html:has(.rotate:not(.skipped)),
+  html:has(.rotate:not(.skipped)) body {
+    overflow: hidden;
+  }
+}
+
+.rotate-box {
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  max-width: 300px;
+  font-family: "Inter Display", "Inter", system-ui, sans-serif;
+  font-weight: 500;
+  color: #fff;
+  text-align: center;
+}
+
+.rotate-box p {
+  margin: 0;
+}
+
+.rotate-phone {
+  width: 54px;
+  height: 92px;
+  margin-bottom: 10px;
+  border: 4px solid #000;
+  border-radius: 12px;
+  background: #ffd805;
+  animation: rotate-hint 2.4s ease-in-out infinite;
+}
+
+@keyframes rotate-hint {
+  0%, 25% { transform: rotate(0deg); }
+  55%, 85% { transform: rotate(-90deg); }
+  100% { transform: rotate(0deg); }
+}
+
+
+
+/* ---------- Текст в стиле лонгрида вне сцен (.tv-text) ----------
+   Для экрана загрузки и «поверни телефон»: те же белые буквы, чёрная
+   обводка и жёлтая подложка, что у основного текста. Контуры рисует
+   js/main.js; data-size — кегль в настоящих пикселях. */
+.tv-text {
+  position: relative;
+  isolation: isolate;
+  margin: 0;
+  font-family: "Inter Display", "Inter", system-ui, sans-serif;
+  font-weight: 500;
+  line-height: 1.21;
+  letter-spacing: -0.005em;
+  text-align: center;
+  white-space: nowrap;
+  color: #fff;
+  text-shadow: 0.08em 0 0 #000, -0.08em 0 0 #000, 0 0.08em 0 #000, 0 -0.08em 0 #000;
+}
+
+.tv-text.drawn {
+  color: transparent;
+  text-shadow: none;
+}
+
+.tv-text svg {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.tv-text text {
+  text-anchor: middle;
+}
+
+.tv-text use {
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.tv-text .halo {
+  fill: #ffd805;
+  stroke: #ffd805;
+}
+
+.tv-text .stroke {
+  fill: #000;
+  stroke: #000;
+}
+
+.tv-text .ink {
+  fill: #fff;
+}
+
+/* ---------- Экран загрузки ---------- */
+.loader {
+  display: none;
+}
+
+.js .loader {
+  position: fixed;
+  inset: 0;
+  z-index: 9999999;
+  display: grid;
+  place-items: center;
+  background: #ff331a;
+  transition: opacity 0.6s ease;
+}
+
+.loader.done {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.loading,
+.loading body {
+  overflow: hidden;
+}
+
+
+/* ---------- Текст крупнее на телефоне ----------
+   На узких экранах (телефон горизонтально) основной текст на 20% больше.
+   Блок увеличивается от центра, раскладка остаётся прежней. */
+@media (max-width: 1000px) {
+  .caption {
+    --cap-scale: 1.2;
+  }
+}
+
+/* ---------- Телефон ----------
+   Тяжёлые эффекты, из-за которых прокрутка на телефоне тормозит,
+   выключены: размытые переходы между сценами и размытие текстов.
+   Шум слабее, чтобы текст читался. */
+.phone {
+  --noise: 0.06;
+  --in-dur: 0.7s;
+}
+
+.phone .seam {
+  display: none;
+}
+
+/* Если сцена на телефоне удлинилась под крупный текст, фоновая картинка
+   растягивается до низа сцены, чтобы снизу не вылезал белый фон. */
+.phone .el.bg img {
+  min-height: calc((var(--h) + var(--dh, 0) - var(--y) - var(--dy, 0)) * var(--u));
+  object-fit: cover;
+  object-position: 50% 0;
+}
+
+.phone .caption {
+  filter: none;
+}
+
+/* На телефоне текст крупнее и шире, поэтому кладём его поверх картинок,
+   чтобы цветы и персонажи по краям не перекрывали буквы. */
+.phone .el:has(.caption) {
+  z-index: 6;
+}
 
 /* ---------- Если в системе выключены анимации ---------- */
 @media (prefers-reduced-motion: reduce) {
@@ -358,6 +551,11 @@ body {
 
   .fx.once {
     animation-duration: 1ms;
+  }
+
+  .rotate-phone {
+    animation: none;
+    transform: rotate(-90deg);
   }
 
   .js .el[data-in] {

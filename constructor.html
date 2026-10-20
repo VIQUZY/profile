@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Конструктор галерей</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root { --ink:#323232; --paper:#f5f5f5; --mute:#949494; --line:#d9d9d9; --hot:#1d1d1d; }
+* { box-sizing: border-box; }
+body { margin:0; background:var(--paper); color:var(--ink); font-family:'Inter',Arial,sans-serif; font-size:15px; }
+.wrap { max-width:1200px; margin:0 auto; padding:24px max(16px,3vw) 120px; }
+h1 { font-size:28px; font-weight:600; letter-spacing:-.02em; margin:0 0 6px; }
+.hint { color:var(--mute); max-width:62ch; line-height:1.4; margin:0 0 28px; }
+.proj { border-top:2px solid var(--ink); padding:14px 0 30px; }
+.proj__head { display:flex; gap:14px; align-items:baseline; flex-wrap:wrap; margin-bottom:14px; }
+.proj__num { color:var(--mute); }
+.proj__title { font-size:20px; font-weight:600; letter-spacing:-.01em; }
+.proj__count { color:var(--mute); margin-left:auto; }
+.grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:10px; min-height:60px; }
+.card { position:relative; background:#fff; border:1px solid var(--line); cursor:grab; user-select:none; }
+.card.dragging { opacity:.35; }
+.card.over { outline:2px solid var(--ink); outline-offset:2px; }
+.card img { display:block; width:100%; aspect-ratio:4/3; object-fit:contain; background:#eee; pointer-events:none; }
+.card__bar { display:flex; align-items:center; gap:4px; padding:6px; font-size:12px; }
+.card__pos { color:var(--mute); margin-right:auto; font-variant-numeric:tabular-nums; }
+.card button { border:1px solid var(--line); background:var(--paper); color:var(--ink); width:26px; height:24px; cursor:pointer; font:inherit; }
+.card button:hover { background:var(--ink); color:var(--paper); }
+.card .new { position:absolute; top:6px; left:6px; background:var(--ink); color:var(--paper); font-size:11px; padding:2px 6px; }
+.drop { display:flex; align-items:center; justify-content:center; text-align:center; border:1.5px dashed var(--mute); color:var(--mute); min-height:150px; cursor:pointer; padding:10px; font-size:13px; }
+.drop:hover, .drop.over { border-color:var(--ink); color:var(--ink); }
+.removed { margin-top:10px; color:var(--mute); font-size:13px; }
+.removed button { background:none; border:none; text-decoration:underline; color:inherit; cursor:pointer; font:inherit; padding:0 4px; }
+.bar { position:fixed; left:0; right:0; bottom:0; background:var(--ink); color:var(--paper); }
+.bar__in { max-width:1200px; margin:0 auto; padding:14px max(16px,3vw); display:flex; gap:16px; align-items:center; flex-wrap:wrap; }
+.bar__in span { opacity:.7; }
+.bar button { margin-left:auto; background:var(--paper); color:var(--ink); border:0; padding:10px 18px; font:inherit; font-weight:600; cursor:pointer; }
+.bar button:hover { background:#fff; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>конструктор галерей</h1>
+  <p class="hint">перетаскивай картинки, чтобы поменять порядок, или жми ← →. крестик убирает картинку (её можно вернуть). в пунктирное поле можно перетащить новые файлы или нажать и выбрать их. когда закончишь — нажми «сохранить для claude» внизу и пришли получившийся файл portfolio-order.json в чат.</p>
+  <div id="list"></div>
+</div>
+<div class="bar"><div class="bar__in"><span id="status">изменений пока нет</span><button id="save" type="button">сохранить для claude</button></div></div>
+<script>
+var T = 'https://static.tildacdn.com/';
+var DATA = [{"id": "suevernik", "num": "01", "title": "суеверник", "images": ["tild3234-3235-4763-b063-636335336433/0627.gif", "img/suevernik/n01.webp", "tild3063-3863-4463-b663-353937656538/__2025-12-24__131645.png", "img/suevernik/n02.webp", "img/suevernik/n03.webp", "img/suevernik/n04.webp", "img/suevernik/n05.webp", "tild6130-3133-4661-b030-383834656133/Slide_16_9_-_101.png", "tild6662-6632-4332-b139-626134396538/Slide_16_9_-_102.png", "img/suevernik/n06.webp", "tild6362-3763-4336-b138-643462663233/Slide_16_9_-_99.png", "img/suevernik/n08.webp", "img/suevernik/n07.webp"]}, {"id": "stepashka", "num": "02", "title": "степашка", "images": ["img/stepashka/n03.webp", "img/stepashka/n04.webp", "img/stepashka/04.webp", "img/stepashka/07.webp", "img/stepashka/08.webp", "img/stepashka/n01.webp", "img/stepashka/02.webp", "img/stepashka/01.webp", "img/stepashka/03.webp", "img/stepashka/05.webp", "img/stepashka/06.webp", "img/stepashka/09.webp", "img/stepashka/n05.webp", "img/stepashka/n06.webp", "img/stepashka/n08.webp", "img/stepashka/n09.webp", "img/stepashka/n13.webp", "img/stepashka/n11.webp", "img/stepashka/n10.webp", "img/stepashka/n07.webp"]}, {"id": "birch", "num": "03", "title": "берёзафест", "images": ["tild3532-6537-4762-a130-303563623236/999e1a75886a4b3f9816.jpg", "tild3662-6632-4031-b733-373538623239/8ebbb95b51c14baba749.jpg", "tild3363-3564-4530-b761-633061666562/0_1080_N.gif", "tild6133-3534-4363-b065-306565623465/4f342ade46014aba9e53.jpg", "tild6433-6632-4163-a231-373132366661/7294974949e64a088d7c.jpg", "tild6663-6532-4139-a330-613638353663/a2101c54e58e415ba209.jpg", "tild6637-6635-4934-a134-323566313835/e22fb05746cf4359acf8.jpg"]}, {"id": "longread", "num": "04", "title": "я боялась, что меня украдут они", "images": ["img/longread/n01.webp", "tild3930-6637-4163-a337-353464623162/4.gif", "tild6463-6333-4761-b230-303435356530/4561c0b7-39b2-48d5-8.png", "tild3437-3930-4035-a538-666466663463/3.gif", "tild6631-3739-4565-b062-313634663132/896d5a62-67ec-43e3-b.gif", "tild3536-6537-4132-b263-383863303531/1.gif", "img/longread/n02.webp", "img/longread/n03.webp", "tild6634-6238-4534-b864-306338383336/68774ad4-2b4c-49e1-a.png", "tild6563-6532-4065-a361-353265393732/2.gif"]}];
+function src(x) { return /^(https?:|data:|img\/)/.test(x) ? x : T + x; }
+var state = DATA.map(function (p) { return { id: p.id, num: p.num, title: p.title, items: p.images.map(function (s) { return { src: s }; }), removed: [] }; });
+var changed = false, drag = null;
+function mark() { changed = true; document.getElementById('status').textContent = 'есть несохранённые изменения'; }
+function render() {
+  var list = document.getElementById('list'); list.innerHTML = '';
+  state.forEach(function (p, pi) {
+    var sec = document.createElement('section'); sec.className = 'proj';
+    sec.innerHTML = '<div class="proj__head"><span class="proj__num">' + p.num + '</span><span class="proj__title"></span><span class="proj__count">' + p.items.length + ' картинок</span></div><div class="grid"></div>';
+    sec.querySelector('.proj__title').textContent = p.title;
+    var grid = sec.querySelector('.grid');
+    p.items.forEach(function (it, i) {
+      var c = document.createElement('div'); c.className = 'card'; c.draggable = true;
+      c.innerHTML = (it.data ? '<span class="new">новая</span>' : '') + '<img alt=""><div class="card__bar"><span class="card__pos">' + (i + 1) + '</span><button type="button" data-a="l" title="левее">←</button><button type="button" data-a="r" title="правее">→</button><button type="button" data-a="x" title="убрать">×</button></div>';
+      c.querySelector('img').src = it.data || src(it.src);
+      c.addEventListener('dragstart', function () { drag = { pi: pi, i: i }; c.classList.add('dragging'); });
+      c.addEventListener('dragend', function () { c.classList.remove('dragging'); });
+      c.addEventListener('dragover', function (e) { if (drag && drag.pi === pi) { e.preventDefault(); c.classList.add('over'); } });
+      c.addEventListener('dragleave', function () { c.classList.remove('over'); });
+      c.addEventListener('drop', function (e) {
+        e.preventDefault(); c.classList.remove('over');
+        if (e.dataTransfer.files && e.dataTransfer.files.length) { addFiles(pi, e.dataTransfer.files, i); return; }
+        if (!drag || drag.pi !== pi || drag.i === i) return;
+        var m = p.items.splice(drag.i, 1)[0]; p.items.splice(i, 0, m); drag = null; mark(); render();
+      });
+      c.addEventListener('click', function (e) {
+        var a = e.target.getAttribute && e.target.getAttribute('data-a'); if (!a) return;
+        if (a === 'l' && i > 0) { p.items.splice(i - 1, 0, p.items.splice(i, 1)[0]); }
+        if (a === 'r' && i < p.items.length - 1) { p.items.splice(i + 1, 0, p.items.splice(i, 1)[0]); }
+        if (a === 'x') { p.removed.push(p.items.splice(i, 1)[0]); }
+        mark(); render();
+      });
+      grid.appendChild(c);
+    });
+    var d = document.createElement('label'); d.className = 'drop';
+    d.innerHTML = '+ добавить картинки<br>(перетащи сюда или нажми)<input type="file" accept="image/*" multiple hidden>';
+    d.querySelector('input').addEventListener('change', function (e) { addFiles(pi, e.target.files); });
+    d.addEventListener('dragover', function (e) { e.preventDefault(); d.classList.add('over'); });
+    d.addEventListener('dragleave', function () { d.classList.remove('over'); });
+    d.addEventListener('drop', function (e) { e.preventDefault(); d.classList.remove('over'); if (e.dataTransfer.files.length) addFiles(pi, e.dataTransfer.files); });
+    grid.appendChild(d);
+    if (p.removed.length) {
+      var r = document.createElement('div'); r.className = 'removed';
+      r.innerHTML = 'убрано: ' + p.removed.length + ' <button type="button">вернуть все</button>';
+      r.querySelector('button').addEventListener('click', function () { p.items = p.items.concat(p.removed); p.removed = []; mark(); render(); });
+      sec.appendChild(r);
+    }
+    list.appendChild(sec);
+  });
+}
+function addFiles(pi, files, at) {
+  var arr = Array.prototype.slice.call(files).filter(function (f) { return /^image\//.test(f.type); });
+  var left = arr.length; if (!left) return;
+  var added = new Array(arr.length);
+  arr.forEach(function (f, k) {
+    var fr = new FileReader();
+    fr.onload = function () {
+      added[k] = { name: f.name, data: fr.result };
+      if (--left === 0) {
+        var items = state[pi].items;
+        if (at == null) state[pi].items = items.concat(added); else items.splice.apply(items, [at, 0].concat(added));
+        mark(); render();
+      }
+    };
+    fr.readAsDataURL(f);
+  });
+}
+document.getElementById('save').addEventListener('click', function () {
+  var out = { version: 1, projects: state.map(function (p) { return { id: p.id, title: p.title, images: p.items.map(function (it) { return it.data ? { name: it.name, data: it.data } : { src: it.src }; }) }; }) };
+  var blob = new Blob([JSON.stringify(out)], { type: 'application/json' });
+  var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'portfolio-order.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  changed = false; document.getElementById('status').textContent = 'сохранено: portfolio-order.json — пришли его в чат';
+});
+window.addEventListener('beforeunload', function (e) { if (changed) { e.preventDefault(); e.returnValue = ''; } });
+render();
+</script>
+</body>
+</html>
