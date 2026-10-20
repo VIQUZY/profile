@@ -120,7 +120,8 @@ h1, h2, h3, p, ul, ol { font: inherit; padding: 0; list-style: none; }
 /* --- шапка ---------------------------------------------------------------- */
 
 .logo { position: absolute; top: calc(23 * var(--u)); left: calc(50 * var(--u)); display: flex; align-items: flex-start; }
-.logo .sup { font-size: calc(var(--f-text) * var(--u)); font-weight: 500; opacity: .5; margin: calc(-8 * var(--u)) 0 0 calc(1 * var(--u)); letter-spacing: calc(-0.8 * var(--u) + var(--ls)); }
+.logo .sup { font-size: calc(var(--f-text) * .85 * var(--u)); font-weight: 500; opacity: .5; margin: calc(-8 * var(--u)) 0 0 calc(1 * var(--u)); letter-spacing: calc(-0.8 * var(--u) + var(--ls)); }
+.logo .t-name { font-size: calc(var(--f-name) * .85 * var(--u)); }   /* надпись в шапке на 15% меньше названий проектов */
 .logo a:hover { opacity: .5; }
 .girl { position: absolute; left: calc(1038 * var(--u)); top: calc(-6 * var(--u)); width: calc(62 * var(--u)); }   /* девочка — в правом углу, по правому краю сетки */
 .girl svg { display: block; width: 100%; height: auto; color: #000; }
@@ -430,7 +431,11 @@ h1, h2, h3, p, ul, ol { font: inherit; padding: 0; list-style: none; }
 @media (min-width: 700px) {
   .strip--me .body__side { justify-content: flex-start !important; }
   .strip--me .me__text { display: contents; }
-  .strip--me .me__text > .me__m { margin-top: calc(48 * var(--u)) !important; }
+  .strip--me .me__text > .me__m { display: none; }
+  .strip--me .me__text > p.me__d { margin-top: calc(48 * var(--u)) !important; }
+  .strip--me .me__open { margin-top: calc(40 * var(--u)) !important; }
+  .strip--me .me__open p + p { margin-top: .3em; }
+  .strip--me .me__open a { color: inherit; }
   .strip--me .me__foot { margin-top: auto !important; }
 }
 /* последняя строка «обо мне»: alumni и контакт — два столбика по сетке */
@@ -452,7 +457,7 @@ h1, h2, h3, p, ul, ol { font: inherit; padding: 0; list-style: none; }
   .strip:not(.strip--me) .body__grid { padding-top: calc(8 * var(--u)) !important; }
   .strip--me .me__foot { margin-top: 0; }
   /* первый экран: без направлений и alumni, серый текст висит справа от «носителя.» */
-  .strip--me .dirs, .strip--me .me__foot { display: none !important; }
+  .strip--me .dirs, .strip--me .me__foot, .strip--me .me__d { display: none !important; }
   .strip--me .me__m { margin-top: 0 !important; }
 }
 .t-desc .hang { margin-top: .9em; }
@@ -1023,7 +1028,11 @@ function meBody() {
           '<div class="hang-open"><p class="mute">открыта к сотрудничеству с брендами, культурными институциями и авторами.</p>' +
           '<p class="mute"><a href="https://t.me/iamviquzy" target="_blank" rel="noopener">@iamviquzy</a></p></div>' +
         '</div>' +
-        '<div class="me__foot"><p class="mute">hse design<br>alumni 2026</p></div>' +
+        // компьютер: чёрный абзац, ниже короткий серый блок с телеграмом, внизу alumni и год
+        '<p class="lead me__d">мультидисциплинарный дизайнер. делаю айдентику, визуальные системы и концептуальные проекты — от исследования и идеи до готового носителя</p>' +
+        '<div class="me__d me__open"><p class="mute">открыта<br>к сотрудничеству</p>' +
+          '<p class="mute"><a href="https://t.me/iamviquzy" target="_blank" rel="noopener">@iamviquzy</a></p></div>' +
+        '<div class="me__foot"><p class="mute">hse design<br>alumni</p><p class="mute">2026</p></div>' +
         '</div>' +
       '</div>' +
       '<div class="stage">' +
