@@ -430,7 +430,7 @@ h1, h2, h3, p, ul, ol { font: inherit; padding: 0; list-style: none; }
 @media (min-width: 700px) {
   .strip--me .body__side { justify-content: flex-start !important; }
   .strip--me .me__text { display: contents; }
-  .strip--me .me__text > p.lead { margin-top: calc(48 * var(--u)) !important; }
+  .strip--me .me__text > .me__m { margin-top: calc(48 * var(--u)) !important; }
   .strip--me .me__foot { margin-top: auto !important; }
 }
 /* последняя строка «обо мне»: alumni и контакт — два столбика по сетке */
@@ -452,18 +452,15 @@ h1, h2, h3, p, ul, ol { font: inherit; padding: 0; list-style: none; }
   .strip:not(.strip--me) .body__grid { padding-top: calc(8 * var(--u)) !important; }
   .strip--me .me__foot { margin-top: 0; }
   /* первый экран: без направлений и alumni, серый текст висит справа от «носителя.» */
-  .strip--me .dirs, .strip--me .me__text { display: none !important; }
-  .strip--me .me__m { display: block; }
+  .strip--me .dirs, .strip--me .me__foot { display: none !important; }
+  .strip--me .me__m { margin-top: 0 !important; }
 }
-.me__m { display: none; }
 .t-desc .hang { margin-top: .9em; }
 .nobr { white-space: nowrap; }
 /* компьютер: серый абзац сразу под чёрным, с отступом на ширину иконки проекта; следующая строка — тоже без зазора */
 .t-desc .hang + p { margin-top: 0; }   /* следующий абзац — сразу, через обычный межстрочный */
 .t-desc .hang-open p { margin: 0; }
 .t-desc .hang-open .mute { font-weight: 500; }   /* серый — той же толщины, что чёрный */
-.hang-row { display: flex; align-items: baseline; gap: .3em; }
-.hang-row > .lead { flex: none; }
 .hang-open { flex: 1; min-width: 0; }
 .t-desc .hang-open p + p { margin-top: .5em; }
 .hang-open a { color: inherit; }
@@ -1020,16 +1017,13 @@ function meBody() {
       '<div class="body__side t-desc">' +
         '<div class="mute dirs"><p>branding<br>content<br>merch</p><p>art direction<br>performance<br>ai</p></div>' +
         '<div class="me__text">' +
-        '<p class="lead">мультидисциплинарный дизайнер. делаю айдентику, визуальные системы и концептуальные проекты — от исследования и идеи до готового носителя. открыта к сотрудничеству с брендами, культурными институциями и авторами.</p>' +
-        '<div class="me__foot"><p class="mute">hse design<br>alumni 2026</p>' +
-        '<p class="mute"><a class="tg-link" href="https://t.me/iamviquzy" target="_blank" rel="noopener">@iamviquzy</a></p></div>' +
-        '</div>' +
-        // телефон: серый текст висит справа от последнего слова, под ним телеграм
-        '<div class="me__m">' +
-          '<p class="lead">мультидисциплинарный дизайнер. делаю айдентику, визуальные системы и концептуальные проекты — от исследования и идеи до готового</p>' +
-          '<div class="hang-row"><p class="lead">носителя.</p>' +
+        // серый текст висит справа от последнего слова (hangLayout), под ним телеграм
+        '<div class="me__m hang">' +
+          '<p class="lead">мультидисциплинарный дизайнер. делаю айдентику, визуальные системы и концептуальные проекты — от исследования и идеи до готового носителя.<span class="hang-end"></span></p>' +
           '<div class="hang-open"><p class="mute">открыта к сотрудничеству с брендами, культурными институциями и авторами.</p>' +
-          '<p class="mute"><a href="https://t.me/iamviquzy" target="_blank" rel="noopener">@iamviquzy</a></p></div></div>' +
+          '<p class="mute"><a href="https://t.me/iamviquzy" target="_blank" rel="noopener">@iamviquzy</a></p></div>' +
+        '</div>' +
+        '<div class="me__foot"><p class="mute">hse design<br>alumni 2026</p></div>' +
         '</div>' +
       '</div>' +
       '<div class="stage">' +
@@ -1064,10 +1058,24 @@ function hangLayout(root) {
   root.querySelectorAll('.hang').forEach(function (h) {
     var p = h.querySelector('p.lead'), end = h.querySelector('.hang-end'), open = h.querySelector('.hang-open');
     open.style.marginLeft = ''; open.style.marginTop = '';
+    p.querySelectorAll('br.hang-br').forEach(function (br) { br.replaceWith(' '); });   // перенос от прошлого раза
+    p.normalize();
     if (!h.offsetParent || !end) return;                     // блок ещё не показан
     var cs = getComputedStyle(p), w = p.clientWidth;
-    var x = end.getBoundingClientRect().left - p.getBoundingClientRect().left + .3 * parseFloat(cs.fontSize);
-    if (w - x < .45 * w) { open.style.marginLeft = .24 * w + 'px'; return; }
+    var endX = function () { return end.getBoundingClientRect().left - p.getBoundingClientRect().left + .3 * parseFloat(cs.fontSize); };
+    var x = endX();
+    if (w - x < .45 * w) {
+      // мало места: последнее слово (вместе с приклеенными к нему) уходит на новую строку, серый висит от него
+      var t = end.previousSibling, i = t && t.nodeType === 3 ? t.nodeValue.lastIndexOf(' ') : -1;
+      if (i > 0) {
+        var rest = t.splitText(i);
+        rest.nodeValue = rest.nodeValue.slice(1);
+        var br = document.createElement('br'); br.className = 'hang-br';
+        p.insertBefore(br, rest);
+        x = endX();
+      }
+      if (w - x < .45 * w) { open.style.marginLeft = .24 * w + 'px'; return; }
+    }
     open.style.marginLeft = x + 'px';
     open.style.marginTop = -parseFloat(cs.lineHeight) + 'px';
   });
