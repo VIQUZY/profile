@@ -457,7 +457,9 @@ h1, h2, h3, p, ul, ol { font: inherit; padding: 0; list-style: none; }
   .strip:not(.strip--me) .body__grid { padding-top: calc(8 * var(--u)) !important; }
   .strip--me .me__foot { margin-top: 0; }
   /* первый экран: без направлений и alumni, серый текст висит справа от «носителя.» */
-  .strip--me .dirs, .strip--me .me__foot, .strip--me .me__d { display: none !important; }
+  .strip--me .me__foot, .strip--me .me__d { display: none !important; }
+  .strip--me .me__m .hang-open .mute { font-weight: 400; }
+  .t-desc .me__m .hang-open p + p { margin-top: .15em; }
   .strip--me .me__m { margin-top: 0 !important; }
 }
 .t-desc .hang { margin-top: .9em; }
@@ -545,7 +547,7 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--ink); outline-o
   .strip__kind, .strip__img, .strip__icon { display: none; }
   .strips.me-open .strip__titlebox { margin: 0; }
   .strips.me-open .strip__icon { display: none; }
-  .girl { position: relative; left: auto; top: auto; width: calc(35 * var(--u)); margin: calc(-4 * var(--u)) 0 0 auto; }
+  .girl { position: relative; left: auto; top: auto; width: calc(44 * var(--u)); margin: calc(-4 * var(--u)) 0 calc(-9 * var(--u)) auto; }   /* крупнее, но шапку не раздвигает */
   .body__side .icons { grid-template-columns: calc(40 * var(--u)); }
   .strips.has-open .strip__title, .strips.me-open .strip__title { font-size: calc(var(--f-big) * var(--u)); }
   .strips.has-open .strip__year, .strips.me-open .strip__year { opacity: 1; }
@@ -746,7 +748,7 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--ink); outline-o
   .page .strips .strip__face:hover { background: none; color: var(--ink); }
   /* главная: отступ между направлениями и текстом, блокнот по центру */
   .strip--me .body__side > .mute:first-child { margin-bottom: calc(20 * var(--u)); }
-  .dirs { grid-template-columns: 1fr auto; }
+  .dirs { grid-template-columns: var(--hang-x, calc(80 * var(--u))) auto; column-gap: 0; }   /* второй столбик — ровно там, где начинается серый текст */
   .strip--me .stage { width: 100%; height: calc(320 * var(--u)) !important; margin: calc(10 * var(--u)) 0 calc(44 * var(--u)) !important; }
   /* проект: без лишнего отступа сверху, картинки во всю ширину */
   .strip:not(.strip--me) .body__head { display: none; }
@@ -1025,7 +1027,7 @@ function meBody() {
         // серый текст висит справа от последнего слова (hangLayout), под ним телеграм
         '<div class="me__m hang">' +
           '<p class="lead">мультидисциплинарный дизайнер. делаю айдентику, визуальные системы и концептуальные проекты — от исследования и идеи до готового носителя.<span class="hang-end"></span></p>' +
-          '<div class="hang-open"><p class="mute">открыта к сотрудничеству с брендами, культурными институциями и авторами.</p>' +
+          '<div class="hang-open"><p class="mute">открыта<br>к сотрудничеству</p>' +
           '<p class="mute"><a href="https://t.me/iamviquzy" target="_blank" rel="noopener">@iamviquzy</a></p></div>' +
         '</div>' +
         // компьютер: чёрный абзац, ниже короткий серый блок с телеграмом, внизу alumni и год
@@ -1072,6 +1074,7 @@ function hangLayout(root) {
     var x = end.getBoundingClientRect().left - p.getBoundingClientRect().left + .3 * parseFloat(cs.fontSize);
     if (w - x < .45 * w) { open.style.marginLeft = .24 * w + 'px'; return; }   // мало места — строкой ниже, с отступом
     open.style.marginLeft = x + 'px';
+    var sd = h.closest('.body__side'); if (sd) sd.style.setProperty('--hang-x', x + 'px');   // по нему выравниваются направления на главной
     open.style.marginTop = -parseFloat(cs.lineHeight) + 'px';
   });
 }
@@ -1222,14 +1225,14 @@ function nbSetup(stage) {
     if (stage._inside) closeLater();                           // курсор ушёл с разворота — закрываем через 3 секунды
   });
   // на телефоне блокнот раскрывается сам, когда текст над ним целиком пролистан (ушёл за верх экрана),
-  // с запасом 60px: в Safari страница видна и под строкой состояния
+  // с запасом 30px: в Safari страница видна и под строкой состояния
   // и закрывается, когда листают обратно вверх или блокнот уходит с экрана
   var text = stage.parentNode.querySelector('.body__side');
   if (!mouseLike && text) {
     var past = false;
     var byScroll = function () {
       if (!stage.isConnected) { document.removeEventListener('scroll', byScroll, true); return; }
-      var now = text.getBoundingClientRect().bottom <= -60 && stage.getBoundingClientRect().bottom > 0;
+      var now = text.getBoundingClientRect().bottom <= -30 && stage.getBoundingClientRect().bottom > 0;
       if (now === past) return;
       past = now;
       now ? doOpen() : doClose();
