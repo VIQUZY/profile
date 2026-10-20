@@ -122,7 +122,7 @@ h1, h2, h3, p, ul, ol { font: inherit; padding: 0; list-style: none; }
 .logo { position: absolute; top: calc(23 * var(--u)); left: calc(50 * var(--u)); display: flex; align-items: flex-start; }
 .logo .sup { font-size: calc(var(--f-text) * var(--u)); font-weight: 500; opacity: .5; margin: calc(-8 * var(--u)) 0 0 calc(1 * var(--u)); letter-spacing: calc(-0.8 * var(--u) + var(--ls)); }
 .logo a:hover { opacity: .5; }
-.girl { position: absolute; left: calc(1050 * var(--u)); top: calc(-2.6 * var(--u)); width: calc(50 * var(--u)); }   /* девочка — в правом углу, по правому краю сетки */
+.girl { position: absolute; left: calc(1038 * var(--u)); top: calc(-6 * var(--u)); width: calc(62 * var(--u)); }   /* девочка — в правом углу, по правому краю сетки */
 .girl svg { display: block; width: 100%; height: auto; color: #000; }
 /* подмигивание: правый глаз на миг закрывается (рисунок из твоего SVG) */
 .girl .eye-wink { opacity: 0; }
@@ -130,6 +130,12 @@ h1, h2, h3, p, ul, ol { font: inherit; padding: 0; list-style: none; }
 .girl:hover .eye-wink { animation: eye-wink .7s steps(1, end) both; }
 @keyframes eye-open { 0% { opacity: 0; } 100% { opacity: 1; } }
 @keyframes eye-wink { 0% { opacity: 1; } 100% { opacity: 0; } }
+/* сама подмигивает раз в 7 секунд (на полсекунды) */
+.girl .eye-open { animation: eye-open-auto 7s steps(1, end) 2s infinite; }
+.girl .eye-wink { animation: eye-wink-auto 7s steps(1, end) 2s infinite; }
+@keyframes eye-open-auto { 0% { opacity: 1; } 92% { opacity: 0; } 100% { opacity: 1; } }
+@keyframes eye-wink-auto { 0% { opacity: 0; } 92% { opacity: 1; } 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .girl .eye-open, .girl .eye-wink { animation: none; } }
 /* белый/серый фон картинок растворяется, сетка проходит сквозь */
 .logo__gif, .me__gif, .strip__icon, .strip__img, .body__side .icons img, .me__aside img { mix-blend-mode: multiply; }
 
@@ -456,8 +462,9 @@ h1, h2, h3, p, ul, ol { font: inherit; padding: 0; list-style: none; }
 /* компьютер: серый абзац сразу под чёрным, с отступом на ширину иконки проекта; следующая строка — тоже без зазора */
 @media (min-width: 700px) {
   .t-desc p.mute.hang-under { margin-top: 0; padding-left: calc(64.375 * var(--u)); }
-  .t-desc p.hang-under + p { margin-top: 0; }
 }
+.t-desc p.hang-under + p { margin-top: 0; }   /* на телефоне это первая строка после висящего серого блока */
+.t-desc .hang-open p { margin: 0; }
 .hang-row { display: flex; align-items: baseline; gap: .3em; }
 .hang-row > .lead { flex: none; }
 .hang-open { flex: 1; min-width: 0; }
@@ -540,7 +547,7 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--ink); outline-o
   .strip__kind, .strip__img, .strip__icon { display: none; }
   .strips.me-open .strip__titlebox { margin: 0; }
   .strips.me-open .strip__icon { display: none; }
-  .girl { position: relative; left: auto; top: auto; width: calc(28 * var(--u)); margin: calc(-4 * var(--u)) 0 0 auto; }
+  .girl { position: relative; left: auto; top: auto; width: calc(35 * var(--u)); margin: calc(-4 * var(--u)) 0 0 auto; }
   .body__side .icons { grid-template-columns: calc(40 * var(--u)); }
   .strips.has-open .strip__title, .strips.me-open .strip__title { font-size: calc(var(--f-big) * var(--u)); }
   .strips.has-open .strip__year, .strips.me-open .strip__year { opacity: 1; }
@@ -802,8 +809,7 @@ var PROJECTS = [
     desc: [
       ['lead', 'суеверник — выставка суеверий, которая представляет собой систематизированный подход к изучению культурного феномена суеверий через материальные объекты.'],
       ['mute', 'проект начинался как онлайн-исследование. в pinterest контент проекта набрал 2,89 млн показов и 25 тыс. сохранений.'],
-      ['lead', 'сейчас готовится выставка в первом музее славянской мифологии в {Томске}.'],
-      ['mute', 'параллельно в работе маленькая книга о суевериях. её мы делаем вместе с издательством {АСТ}.']
+      ['lead', 'сейчас готовится выставка в первом музее славянской мифологии в {Томске}. параллельно в работе маленькая книга о суевериях. её мы делаем вместе с издательством {АСТ}.']
     ],
     images: [
       'tild3234-3235-4763-b063-636335336433/0627.gif',
@@ -968,15 +974,13 @@ function projectBody(p) {
   var i = PROJECTS.indexOf(p), next = PROJECTS[(i + 1) % PROJECTS.length];
   var hungAt = -1;
   var desc = p.desc.map(function (d, k) {
-    // телефон: первый серый абзац висит справа от последнего слова чёрного, как на главной
+    // телефон: первый серый абзац начинается на последней строке чёрного, сразу после него (hangLayout)
     var nx = p.desc[k + 1];
     if (hungAt < 0 && d[0] === 'lead' && nx && nx[0] === 'mute') {
       hungAt = k;
-      var cut = d[1].lastIndexOf(' ');
       return '<p class="lead desk-only">' + fmt(d[1]) + '</p>' +
-        '<div class="hang mob-only"><p class="lead">' + fmt(d[1].slice(0, cut)) + '</p>' +
-        '<div class="hang-row"><p class="lead">' + fmt(d[1].slice(cut + 1)) + '</p>' +
-        '<div class="hang-open"><p class="mute">' + fmt(nx[1]) + '</p></div></div></div>';
+        '<div class="hang mob-only"><p class="lead">' + fmt(d[1]) + '<span class="hang-end"></span></p>' +
+        '<div class="hang-open"><p class="mute">' + fmt(nx[1]) + '</p></div></div>';
     }
     if (hungAt >= 0 && k === hungAt + 1) return '<p class="mute desk-only hang-under">' + fmt(d[1]) + '</p>';
     if (d[0] === 'order') return '<p class="lead">' + esc(d[1]) + ' →\u00A0<a href="' + d[3] + '" target="_blank" rel="noopener">' + esc(d[2]) + '</a></p>';   // текст → ссылка
@@ -1060,6 +1064,23 @@ function noHanging(root) {
   }
 }
 
+// серый абзац поднимается на последнюю строку чёрного и встаёт сразу после последнего слова;
+// если на строке мало места — остаётся ниже, с начала строки
+function hangLayout(root) {
+  root.querySelectorAll('.hang').forEach(function (h) {
+    var p = h.querySelector('p.lead'), end = h.querySelector('.hang-end'), open = h.querySelector('.hang-open');
+    open.style.marginLeft = ''; open.style.marginTop = '';
+    if (!h.offsetParent || !end) return;                     // скрыт (компьютер)
+    var cs = getComputedStyle(p), w = p.clientWidth;
+    var x = end.getBoundingClientRect().left - p.getBoundingClientRect().left + .3 * parseFloat(cs.fontSize);
+    if (w - x < .45 * w) return;
+    open.style.marginLeft = x + 'px';
+    open.style.marginTop = -parseFloat(cs.lineHeight) + 'px';
+  });
+}
+window.addEventListener('resize', function () { hangLayout(strips); });
+if (document.fonts) document.fonts.ready.then(function () { hangLayout(strips); });
+
 function render(route) {
   strips.classList.add('no-anim');
   requestAnimationFrame(function () { requestAnimationFrame(function () { strips.classList.remove('no-anim'); }); });
@@ -1084,6 +1105,7 @@ function render(route) {
         body.innerHTML = isMe ? meBody() : projectBody(p);
         body.dataset.ready = '1';
       noHanging(body);
+      hangLayout(body);
       if (isMe && nbObserver) nbObserver.observe(body.querySelector('.stage'));
       if (isMe) nbSetup(body.querySelector('.stage'));
       }
@@ -1195,13 +1217,14 @@ function nbSetup(stage) {
     if (stage._inside) closeLater();                           // курсор ушёл с разворота — закрываем через 3 секунды
   });
   // на телефоне блокнот раскрывается сам, когда текст над ним целиком пролистан (ушёл за верх экрана),
+  // с запасом 60px: в Safari страница видна и под строкой состояния
   // и закрывается, когда листают обратно вверх или блокнот уходит с экрана
   var text = stage.parentNode.querySelector('.body__side');
   if (!mouseLike && text) {
     var past = false;
     var byScroll = function () {
       if (!stage.isConnected) { document.removeEventListener('scroll', byScroll, true); return; }
-      var now = text.getBoundingClientRect().bottom <= 0 && stage.getBoundingClientRect().bottom > 0;
+      var now = text.getBoundingClientRect().bottom <= -60 && stage.getBoundingClientRect().bottom > 0;
       if (now === past) return;
       past = now;
       now ? doOpen() : doClose();
