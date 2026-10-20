@@ -434,8 +434,8 @@ h1, h2, h3, p, ul, ol { font: inherit; padding: 0; list-style: none; }
 .tg-link:hover { opacity: .5; }
 .tg { width: 1em; height: 1em; flex: none; }
 @media (max-width: 699px) {
-  .me__foot { grid-template-columns: 1fr calc(116 * var(--u)); }   /* правый столбик ближе к краю */
-  .page { --rule: calc(1.6 * var(--u)); }                       /* линии на телефоне на 20% тоньше */
+  .me__foot { grid-template-columns: 1fr auto; }   /* правый столбик прижат к краю */
+  .page { --rule: calc(1.2 * var(--u)); }                       /* линии на телефоне тоньше */
   .strip--me .body__head { padding: 0; }
   .strip--me .body__grid { padding-top: calc(16 * var(--u)) !important; }
   .strip--me .body__side { display: flex; flex-direction: column; gap: calc(14 * var(--u)); }
@@ -475,7 +475,7 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--ink); outline-o
 @media (max-width: 699px) {
   .page {
     --u: calc(100vw / 320);
-    --f-name: 16.5; --f-big: 16.5; --f-text: 12; --f-desc: 12; --f-small: 10;
+    --f-name: 18; --f-big: 18; --f-text: 13.5; --f-desc: 13.5; --f-small: 11;
     --gm: 10; --gc: 60; --gp: 80; --gw: 300;
     --gap: calc(20 * var(--u));
     position: relative;
@@ -500,7 +500,8 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--ink); outline-o
   .nav__label { display: none; }
   .projects-label { display: block; margin: calc(30 * var(--u)) 0 calc(10 * var(--u)); }
   .strip--me.is-open { display: block; }
-  .strip:last-child { border-bottom: var(--rule) solid var(--line-gray); }
+  .strips { border-bottom: var(--rule) solid var(--line-gray); }   /* линия под последней строкой списка (открытый проект уезжает наверх) */
+  .desk-only { display: none !important; }
 
   .strip__face {
     position: relative;
@@ -518,7 +519,7 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--ink); outline-o
   .strip__num { grid-column: 1; grid-row: 1; }
   .strip__year { grid-column: 3; grid-row: 1; }
   .strip__titlebox { grid-column: 2; grid-row: 1; margin: 0; min-width: 0; }
-  .strip__title { position: static; writing-mode: horizontal-tb; transform: none; font-size: calc(var(--f-big) * var(--u)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+  .strip__title { position: static; writing-mode: horizontal-tb; transform: none; font-size: calc(var(--f-big) * var(--u)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; line-height: 1.25; }   /* у «у», «р» не обрезаются хвостики */
   .strip__kind, .strip__img, .strip__icon { display: none; }
   .strips.me-open .strip__titlebox { margin: 0; }
   .strips.me-open .strip__icon { display: none; }
@@ -723,7 +724,7 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--ink); outline-o
   .page .strips .strip__face:hover { background: none; color: var(--ink); }
   /* главная: отступ между направлениями и текстом, блокнот по центру */
   .strip--me .body__side > .mute:first-child { margin-bottom: calc(20 * var(--u)); }
-  .dirs { grid-template-columns: 1fr calc(116 * var(--u)); }
+  .dirs { grid-template-columns: 1fr auto; }
   .strip--me .stage { width: 100%; height: calc(320 * var(--u)) !important; margin: calc(10 * var(--u)) 0 calc(44 * var(--u)) !important; }
   /* проект: без лишнего отступа сверху, картинки во всю ширину */
   .strip:not(.strip--me) .body__head { display: none; }
@@ -862,7 +863,7 @@ var PROJECTS = [
     desc: [
       ['lead', 'айсберг моих детских психотравм — это персонажи телепрограмм 2000-х. этому феномену я посвятила лонгрид.'],
       ['mute', 'разобрала сцены, заставки и персонажей, которые остались в моей памяти детским кошмаром.'],
-      ['lead', 'лонгрид можно прочитать целиком.'],
+      ['lead desk-only', 'лонгрид можно прочитать целиком.'],
       ['link', 'читать лонгрид', 'tv2000/tv2000.html', 'tild6463-6333-4761-b230-303435356530/4561c0b7-39b2-48d5-8.png']
     ],
     images: [
