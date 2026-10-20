@@ -44,9 +44,15 @@
   const MOBILE_LAYOUT = false;
   const MOBILE_TEXT_PX = 17;
   const CAPTION_GAP = 60; // зазор между текстами, px макета
+  // Основной текст крупнее макета. Увеличенные тексты раздвигаются
+  // и сцены удлиняются так же, как в мобильной раскладке.
+  const CAPTION_SCALE = 1.2;         // компьютер
+  const CAPTION_SCALE_NARROW = 1.45; // узкий экран (телефон горизонтально)
 
   function fitCaptions() {
-    const scale = phone ? Math.min(2.8, Math.max(1, MOBILE_TEXT_PX / (24 * unit))) : 1;
+    const scale = phone
+      ? Math.min(2.8, Math.max(1, MOBILE_TEXT_PX / (24 * unit)))
+      : (root.clientWidth <= 1000 ? CAPTION_SCALE_NARROW : CAPTION_SCALE);
     root.style.setProperty('--cap-scale', scale.toFixed(3));
     const num = (el, name) => parseFloat(el.style.getPropertyValue(name)) || 0;
     for (const scene of scenes) {
@@ -75,7 +81,8 @@
       // 1. Раскладываем сверху вниз тексты и картинки в центре экрана
       //    (персонажи, гифки между абзацами), чтобы ничего не наезжало.
       //    Картинки по краям (цветы, декор) остаются где были.
-      const central = layers.filter((el) => {
+      //    Вне мобильной раскладки картинки не трогаем: текст и так поверх них.
+      const central = !phone ? [] : layers.filter((el) => {
         if (el.classList.contains('bg') || el.querySelector('.caption')) return false;
         const x = num(el, '--x'), w = num(el, '--w');
         return w < 1000 && x + w / 2 > 250 && x + w / 2 < 950;
@@ -436,12 +443,31 @@
     const defs = document.createElementNS(SVG_NS, 'defs');
     defs.append(group);
     svg.append(defs);
+    // мягкость букв: размытие внутри SVG, одинаковое у всех блоков
+    const art = document.createElementNS(SVG_NS, 'g');
+    const blur = number('--blur');
+    if (blur > 0) {
+      const height = top + rows * lineHeight;
+      const filter = document.createElementNS(SVG_NS, 'filter');
+      filter.id = id + '-soft';
+      filter.setAttribute('filterUnits', 'userSpaceOnUse'); // с запасом: строки и подложка выходят за слой
+      filter.setAttribute('x', -width);
+      filter.setAttribute('y', -2 * size);
+      filter.setAttribute('width', 3 * width);
+      filter.setAttribute('height', (height + 4 * size).toFixed(2));
+      const fe = document.createElementNS(SVG_NS, 'feGaussianBlur');
+      fe.setAttribute('stdDeviation', blur);
+      filter.append(fe);
+      defs.append(filter);
+      art.setAttribute('filter', `url(#${filter.id})`);
+    }
     for (const layer of ['halo', 'halo-fill', 'stroke', 'ink']) {
       const use = document.createElementNS(SVG_NS, 'use');
       use.setAttribute('class', layer);
       use.setAttribute('href', '#' + id);
-      svg.append(use);
+      art.append(use);
     }
+    svg.append(art);
     caption.prepend(svg);
     caption.classList.add('drawn');
   });

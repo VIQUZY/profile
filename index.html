@@ -475,7 +475,7 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--ink); outline-o
 @media (max-width: 699px) {
   .page {
     --u: calc(100vw / 320);
-    --f-name: 18; --f-big: 18; --f-text: 13.5; --f-desc: 13.5; --f-small: 11;
+    --f-name: 20.7; --f-big: 20.7; --f-text: 15.5; --f-desc: 15.5; --f-small: 12.65;
     --gm: 10; --gc: 60; --gp: 80; --gw: 300;
     --gap: calc(20 * var(--u));
     position: relative;
@@ -1152,14 +1152,19 @@ function nbSetup(stage) {
     if (inX && inY) { stage._inside = true; clearTimeout(stage._later); return; }
     if (stage._inside) closeLater();                           // курсор ушёл с разворота — закрываем через 3 секунды
   });
-  // на телефоне блокнот раскрывается сам, когда при прокрутке целиком попадает в экран, и закрывается, когда уходит
-  if (!mouseLike && window.IntersectionObserver) {
-    new IntersectionObserver(function (es) {
-      es.forEach(function (en) {
-        if (en.intersectionRatio >= .75) doOpen();
-        else if (!en.isIntersecting) doClose();
-      });
-    }, { threshold: [0, .75] }).observe(stage);
+  // на телефоне блокнот раскрывается сам, когда при прокрутке строка с телеграмом доходит до верха экрана,
+  // и закрывается, когда листают обратно вверх или блокнот уходит с экрана
+  var foot = stage.parentNode.querySelector('.me__foot');
+  if (!mouseLike && foot) {
+    var past = false;
+    var byScroll = function () {
+      if (!stage.isConnected) { document.removeEventListener('scroll', byScroll, true); return; }
+      var now = foot.getBoundingClientRect().top <= 0 && stage.getBoundingClientRect().bottom > 0;
+      if (now === past) return;
+      past = now;
+      now ? doOpen() : doClose();
+    };
+    document.addEventListener('scroll', byScroll, { capture: true, passive: true });
   }
   // нажатие, а не прокрутка: палец почти не сдвинулся и отпущен быстро
   var tap = null;
