@@ -129,6 +129,9 @@ h1, h2, h3, p, ul, ol { font: inherit; padding: 0; list-style: none; }
 .girl .eye-wink { opacity: 0; }
 .girl:hover .eye-open { animation: eye-open .7s steps(1, end) both; }
 .girl:hover .eye-wink { animation: eye-wink .7s steps(1, end) both; }
+.girl.is-wink .eye-open { animation: eye-open .7s steps(1, end) both; }   /* по нажатию */
+.girl.is-wink .eye-wink { animation: eye-wink .7s steps(1, end) both; }
+.girl { cursor: pointer; }
 @keyframes eye-open { 0% { opacity: 0; } 100% { opacity: 1; } }
 @keyframes eye-wink { 0% { opacity: 1; } 100% { opacity: 0; } }
 /* сама подмигивает раз в 7 секунд (на полсекунды) */
@@ -1182,6 +1185,12 @@ document.addEventListener('click', function (e) {
   if (b) go(b.dataset.go);
 });
 document.getElementById('home').addEventListener('click', function (e) { e.preventDefault(); go(''); });
+// девочка подмигивает по нажатию (на компьютере — ещё и при наведении)
+var girl = document.querySelector('.girl');
+if (girl) girl.addEventListener('click', function () {
+  girl.classList.remove('is-wink'); void girl.offsetWidth; girl.classList.add('is-wink');
+  clearTimeout(girl._t); girl._t = setTimeout(function () { girl.classList.remove('is-wink'); }, 700);
+});
 // раскрытие блокнота: наведение мышью (или нажатие на телефоне)
 function nbSetup(stage) {
   var scene = stage.querySelector('.nb-scene'), nb = stage.querySelector('.nb');
@@ -1241,7 +1250,9 @@ function nbSetup(stage) {
   });
   // на телефоне блокнот раскрывается сам, когда текст над ним целиком пролистан (ушёл за верх экрана),
   // с запасом 30px: в Safari страница видна и под строкой состояния
-  // и закрывается, когда листают обратно вверх или блокнот уходит с экрана
+  // открытый блокнот на телефоне закрывается только через 10 секунд или по нажатию
+  var autoClose = null;
+  function openForAWhile() { doOpen(); clearTimeout(autoClose); autoClose = setTimeout(doClose, 10000); }
   var text = stage.parentNode.querySelector('.body__side');
   if (!mouseLike && text) {
     var past = false;
@@ -1250,7 +1261,7 @@ function nbSetup(stage) {
       var now = text.getBoundingClientRect().bottom <= -30 && stage.getBoundingClientRect().bottom > 0;
       if (now === past) return;
       past = now;
-      now ? doOpen() : doClose();
+      if (now) openForAWhile();
     };
     document.addEventListener('scroll', byScroll, { capture: true, passive: true });
   }
@@ -1264,7 +1275,8 @@ function nbSetup(stage) {
       if (!tap || Math.abs(e.clientX - tap.x) > 10 || Math.abs(e.clientY - tap.y) > 10 || Math.abs(scrollY - tap.sy) > 5 || Date.now() - tap.t > 500) { tap = null; return; }
       tap = null;
     }
-    open ? doClose() : doOpen();
+    if (open) { clearTimeout(autoClose); doClose(); }
+    else mouseLike ? doOpen() : openForAWhile();
   });
 }
 
