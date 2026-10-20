@@ -1067,24 +1067,10 @@ function hangLayout(root) {
   root.querySelectorAll('.hang').forEach(function (h) {
     var p = h.querySelector('p.lead'), end = h.querySelector('.hang-end'), open = h.querySelector('.hang-open');
     open.style.marginLeft = ''; open.style.marginTop = '';
-    p.querySelectorAll('br.hang-br').forEach(function (br) { br.replaceWith(' '); });   // перенос от прошлого раза
-    p.normalize();
     if (!h.offsetParent || !end) return;                     // блок ещё не показан
     var cs = getComputedStyle(p), w = p.clientWidth;
-    var endX = function () { return end.getBoundingClientRect().left - p.getBoundingClientRect().left + .3 * parseFloat(cs.fontSize); };
-    var x = endX();
-    if (w - x < .45 * w) {
-      // мало места: последнее слово (вместе с приклеенными к нему) уходит на новую строку, серый висит от него
-      var t = end.previousSibling, i = t && t.nodeType === 3 ? t.nodeValue.lastIndexOf(' ') : -1;
-      if (i > 0) {
-        var rest = t.splitText(i);
-        rest.nodeValue = rest.nodeValue.slice(1);
-        var br = document.createElement('br'); br.className = 'hang-br';
-        p.insertBefore(br, rest);
-        x = endX();
-      }
-      if (w - x < .45 * w) { open.style.marginLeft = .24 * w + 'px'; return; }
-    }
+    var x = end.getBoundingClientRect().left - p.getBoundingClientRect().left + .3 * parseFloat(cs.fontSize);
+    if (w - x < .45 * w) { open.style.marginLeft = .24 * w + 'px'; return; }   // мало места — строкой ниже, с отступом
     open.style.marginLeft = x + 'px';
     open.style.marginTop = -parseFloat(cs.lineHeight) + 'px';
   });
