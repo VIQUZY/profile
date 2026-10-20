@@ -458,6 +458,7 @@ h1, h2, h3, p, ul, ol { font: inherit; padding: 0; list-style: none; }
   .strip--me .me__foot { margin-top: 0; }
   /* первый экран: без направлений и alumni, серый текст висит справа от «носителя.» */
   .strip--me .me__foot, .strip--me .me__d { display: none !important; }
+  .strip--me .body__side > .dirs { margin-bottom: calc(16 * var(--u)) !important; }   /* отступ под направлениями: 14 + 16 */
   .strip--me .me__m .hang-open .mute { font-weight: 400; }
   .t-desc .me__m .hang-open p + p { margin-top: .15em; }
   .strip--me .me__m { margin-top: 0 !important; }
@@ -1065,6 +1066,16 @@ function noHanging(root) {
 
 // серый абзац поднимается на последнюю строку чёрного и встаёт сразу после последнего слова;
 // если на строке мало места — встаёт строкой ниже с отступом на ширину иконки проекта
+// рамка последней (или первой) буквы текста внутри el
+function glyphBox(el, last) {
+  var w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), n, t = null;
+  while ((n = w.nextNode())) if (n.nodeValue.trim()) { t = n; if (!last) break; }
+  if (!t) return null;
+  var s = t.nodeValue, i = last ? s.replace(/\s+$/, '').length - 1 : s.search(/\S/);
+  var r = document.createRange(); r.setStart(t, i); r.setEnd(t, i + 1);
+  return r.getBoundingClientRect();
+}
+
 function hangLayout(root) {
   root.querySelectorAll('.hang').forEach(function (h) {
     var p = h.querySelector('p.lead'), end = h.querySelector('.hang-end'), open = h.querySelector('.hang-open');
@@ -1075,7 +1086,11 @@ function hangLayout(root) {
     if (w - x < .45 * w) { open.style.marginLeft = .24 * w + 'px'; return; }   // мало места — строкой ниже, с отступом
     open.style.marginLeft = x + 'px';
     var sd = h.closest('.body__side'); if (sd) sd.style.setProperty('--hang-x', x + 'px');   // по нему выравниваются направления на главной
-    open.style.marginTop = -parseFloat(cs.lineHeight) + 'px';
+    var top = -parseFloat(cs.lineHeight);
+    open.style.marginTop = top + 'px';
+    // браузеры (особенно Safari) ставят строки чуть по-разному — подгоняем серую строку точно под чёрную
+    var a = glyphBox(p, true), b = glyphBox(open, false);
+    if (a && b && Math.abs(b.bottom - a.bottom) > .1) open.style.marginTop = top - (b.bottom - a.bottom) + 'px';
   });
 }
 window.addEventListener('resize', function () { hangLayout(strips); });
