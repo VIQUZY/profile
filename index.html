@@ -445,7 +445,16 @@ h1, h2, h3, p, ul, ol { font: inherit; padding: 0; list-style: none; }
   .body__side .side__date { margin: calc(4 * var(--u)) 0 calc(14 * var(--u)) !important; }
   .strip:not(.strip--me) .body__grid { padding-top: calc(8 * var(--u)) !important; }
   .strip--me .me__foot { margin-top: 0; }
+  /* первый экран: без направлений и alumni, серый текст висит справа от «носителя.» */
+  .strip--me .dirs, .strip--me .me__text { display: none !important; }
+  .strip--me .me__m { display: block; }
 }
+.me__m { display: none; }
+.me__m-row { display: flex; align-items: baseline; gap: .3em; }
+.me__m-row > .lead { flex: none; }
+.me__m-open { flex: 1; min-width: 0; }
+.t-desc .me__m-open p + p { margin-top: .5em; }
+.me__m-open a { color: inherit; }
 @media (min-width: 700px) { .strip--me .dirs { margin-top: calc(-42 * var(--u)); } }   /* на одной линии с номерами 01–04 */
 .me__aside { grid-column: 3 / span 2; grid-row: 2; display: grid; grid-template-columns: repeat(2, calc(128.75 * var(--u))); column-gap: var(--gap); align-items: start; margin-top: calc(30 * var(--u)); }
 .me__aside img { width: 100%; }
@@ -990,6 +999,13 @@ function meBody() {
         '<p class="lead">мультидисциплинарный дизайнер. делаю айдентику, визуальные системы и концептуальные проекты — от исследования и идеи до готового носителя. открыта к сотрудничеству с брендами, культурными институциями и авторами.</p>' +
         '<div class="me__foot"><p class="mute">hse design<br>alumni 2026</p>' +
         '<p class="mute"><a class="tg-link" href="https://t.me/iamviquzy" target="_blank" rel="noopener"><svg class="tg" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M9.04 15.47 8.67 20.6c.53 0 .76-.23 1.04-.5l2.5-2.39 5.18 3.79c.95.52 1.62.25 1.88-.88l3.4-15.95c.31-1.43-.52-1.99-1.45-1.64L1.22 10.79c-1.37.53-1.35 1.3-.23 1.65l5.13 1.6L18.03 6.6c.56-.37 1.07-.17.65.2"/></svg>@iamviquzy</a></p></div>' +
+        '</div>' +
+        // телефон: серый текст висит справа от последнего слова, под ним телеграм
+        '<div class="me__m">' +
+          '<p class="lead">мультидисциплинарный дизайнер. делаю айдентику, визуальные системы и концептуальные проекты — от исследования и идеи до готового</p>' +
+          '<div class="me__m-row"><p class="lead">носителя.</p>' +
+          '<div class="me__m-open"><p class="mute">открыта к сотрудничеству с брендами, культурными институциями и авторами.</p>' +
+          '<p class="mute"><a href="https://t.me/iamviquzy" target="_blank" rel="noopener">@iamviquzy</a></p></div></div>' +
         '</div>' +
       '</div>' +
       '<div class="stage">' +
