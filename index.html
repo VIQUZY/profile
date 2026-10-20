@@ -11,7 +11,7 @@
 <meta name="theme-color" content="#f5f5f5">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;1,600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400..600;1,600&display=swap" rel="stylesheet">
 <style>
 /* ==========================================================================
    КАК УСТРОЕНО: СЕТКА КАК ИНТЕРФЕЙС
@@ -111,7 +111,7 @@ h1, h2, h3, p, ul, ol { font: inherit; padding: 0; list-style: none; }
 .t-mute  { font-size: calc(var(--f-text) * var(--u)); font-weight: 400; line-height: 1.1; opacity: .5; }
 .t-small { font-size: calc(var(--f-small) * var(--u)); font-weight: 400; line-height: 1; letter-spacing: calc(-0.5 * var(--u) + var(--ls)); font-variant-numeric: tabular-nums; }
 .t-desc  { font-size: calc(var(--f-desc) * var(--u)); line-height: 1.25; }
-.t-desc .lead { font-weight: 500; }
+.t-desc .lead { font-weight: 450; }   /* чуть тоньше 500: Inter грузится с плавной толщиной 400–600 */
 .t-desc .mute { font-weight: 400; opacity: .5; }
 .t-desc p + p { margin-top: .9em; }
 .t-desc a { text-decoration: underline; text-decoration-thickness: from-font; text-underline-offset: .12em; }
@@ -467,7 +467,7 @@ h1, h2, h3, p, ul, ol { font: inherit; padding: 0; list-style: none; }
 /* компьютер: серый абзац сразу под чёрным, с отступом на ширину иконки проекта; следующая строка — тоже без зазора */
 .t-desc .hang + p { margin-top: 0; }   /* следующий абзац — сразу, через обычный межстрочный */
 .t-desc .hang-open p { margin: 0; }
-.t-desc .hang-open .mute { font-weight: 500; }   /* серый — той же толщины, что чёрный */
+.t-desc .hang-open .mute { font-weight: 450; }   /* серый — той же толщины, что чёрный */
 .hang-open { flex: 1; min-width: 0; }
 .t-desc .hang-open p + p { margin-top: .5em; }
 .hang-open a { color: inherit; }
@@ -807,7 +807,7 @@ var PROJECTS = [
     icons: ['tild6439-3261-4335-b732-613530363732/Group_46.png', 'tild3735-6430-4033-b264-346266333530/Frame_10.png', 'tild6533-3066-4161-a234-643263326136/1telegram-cloud-docu.gif'],
     pos: { l: '4%', t: '20%', w: '34%', r: '-4deg' },
     desc: [
-      ['lead', 'суеверник — выставка суеверий, которая представляет собой систематизированный подход к изучению культурного феномена суеверий через материальные объекты.'],
+      ['lead', 'суеверник — выставка суеверий, которая представляет собой систематизированный подход к изучению культурного феномена суеверий через материальные|объекты.'],
       ['mute', 'проект начинался как онлайн-исследование. в pinterest контент проекта набрал 2,89 млн показов и 25 тыс. сохранений.'],
       ['lead', 'сейчас готовится выставка в первом музее славянской мифологии в {Томске}. параллельно в работе маленькая книга о суевериях. её мы делаем вместе с издательством {АСТ}.']
     ],
@@ -832,8 +832,7 @@ var PROJECTS = [
     foot: ['©2026', 'branding. characters. merch. media.'],
     icons: [STEPASHKA_IMG],
     desc: [
-      ['lead', 'степашка — персонаж бренда, созданного в рамках дипломного проекта вшэ.'],
-      ['mute', 'вокруг персонажа собрана медиасистема: соцсети, стикеры и мерч.'],
+      ['lead', 'степашка — персонаж бренда, созданного в рамках дипломного проекта вшэ. вокруг персонажа собрана медиасистема: соцсети, стикеры и мерч.'],
       ['order', 'заказать степашку', '@iamviquzy', 'https://t.me/iamviquzy'],
       ['link', 'подробнее о проекте', 'https://hsedesign.ru/project/nakl-pki-22d28cfabffc4f86828cf92af5ff58e5']
     ],
@@ -966,7 +965,8 @@ function head(num, title, closable, label) {
 function fmt(s) {
   return esc(s)
     .replace(/[^\s<>{}]+-[^\s<>{}]+/g, '<span class="nobr">$&</span>')       // слова через дефис не рвутся
-    .replace(/\{([^}]+)\}/g, '<span class="keep-case">$1</span>');           // {Слово} — без строчных
+    .replace(/\{([^}]+)\}/g, '<span class="keep-case">$1</span>')            // {Слово} — без строчных
+    .replace(/\|/g, '<br>');                                               // | — перенос строки вручную
 }
 
 function projectBody(p) {
