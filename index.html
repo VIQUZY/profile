@@ -1152,14 +1152,14 @@ function nbSetup(stage) {
     if (inX && inY) { stage._inside = true; clearTimeout(stage._later); return; }
     if (stage._inside) closeLater();                           // курсор ушёл с разворота — закрываем через 3 секунды
   });
-  // на телефоне блокнот раскрывается сам, когда при прокрутке строка с телеграмом доходит до верха экрана,
+  // на телефоне блокнот раскрывается сам, когда текст над ним целиком пролистан (ушёл за верх экрана),
   // и закрывается, когда листают обратно вверх или блокнот уходит с экрана
-  var foot = stage.parentNode.querySelector('.me__foot');
-  if (!mouseLike && foot) {
+  var text = stage.parentNode.querySelector('.body__side');
+  if (!mouseLike && text) {
     var past = false;
     var byScroll = function () {
       if (!stage.isConnected) { document.removeEventListener('scroll', byScroll, true); return; }
-      var now = foot.getBoundingClientRect().top <= 0 && stage.getBoundingClientRect().bottom > 0;
+      var now = text.getBoundingClientRect().bottom <= 0 && stage.getBoundingClientRect().bottom > 0;
       if (now === past) return;
       past = now;
       now ? doOpen() : doClose();
