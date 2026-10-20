@@ -35,6 +35,7 @@
   --grid-color: transparent;          /* сетка скрыта; вернуть — поставь #e5ebf4 */             /* голубая сетка; убрать — поставь transparent */
   --ease: cubic-bezier(.65, 0, .25, 1);
   --ls: .012em;                      /* межбуквенный интервал: добавка ко всем текстам (≈ +10%) */
+  --ls-text: .018em;                 /* основной текст (абзацы): ещё больше воздуха между буквами (≈ +15%) */
   --line-gray: #949494;              /* серый, как светло-серый текст */
 }
 
@@ -102,7 +103,8 @@ h1, h2, h3, p, ul, ol { font: inherit; padding: 0; list-style: none; }
 
 /* --- типографика ---------------------------------------------------------- */
 
-.t-name, .t-head, .t-lead, .t-mute, .t-small, .t-desc { letter-spacing: calc(-0.8 * var(--u) + var(--ls)); }
+.t-name, .t-head, .t-small { letter-spacing: calc(-0.8 * var(--u) + var(--ls)); }
+.t-lead, .t-mute, .t-desc { letter-spacing: calc(-0.8 * var(--u) + var(--ls) + var(--ls-text)); }
 .t-name  { font-size: calc(var(--f-name) * var(--u)); font-weight: 600; line-height: 1; }
 .t-head  { font-size: calc(var(--f-text) * var(--u)); font-weight: 600; line-height: 1.1; }
 .t-lead  { font-size: calc(var(--f-text) * var(--u)); font-weight: 500; line-height: 1.1; }
@@ -1149,6 +1151,15 @@ function nbSetup(stage) {
     if (inX && inY) { stage._inside = true; clearTimeout(stage._later); return; }
     if (stage._inside) closeLater();                           // курсор ушёл с разворота — закрываем через 3 секунды
   });
+  // на телефоне блокнот раскрывается сам, когда при прокрутке целиком попадает в экран, и закрывается, когда уходит
+  if (!mouseLike && window.IntersectionObserver) {
+    new IntersectionObserver(function (es) {
+      es.forEach(function (en) {
+        if (en.intersectionRatio >= .75) doOpen();
+        else if (!en.isIntersecting) doClose();
+      });
+    }, { threshold: [0, .75] }).observe(stage);
+  }
   // нажатие, а не прокрутка: палец почти не сдвинулся и отпущен быстро
   var tap = null;
   scene.addEventListener('pointerdown', function (e) { tap = { x: e.clientX, y: e.clientY, t: Date.now(), sy: scrollY }; });
