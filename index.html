@@ -455,16 +455,13 @@ h1, h2, h3, p, ul, ol { font: inherit; padding: 0; list-style: none; }
   .strip--me .dirs, .strip--me .me__text { display: none !important; }
   .strip--me .me__m { display: block; }
 }
-.me__m, .mob-only { display: none; }
-@media (max-width: 699px) { .mob-only { display: block; } }
-.t-desc .hang, .t-desc .hang + p { margin-top: .9em; }
+.me__m { display: none; }
+.t-desc .hang { margin-top: .9em; }
 .nobr { white-space: nowrap; }
 /* компьютер: серый абзац сразу под чёрным, с отступом на ширину иконки проекта; следующая строка — тоже без зазора */
-@media (min-width: 700px) {
-  .t-desc p.mute.hang-under { margin-top: 0; padding-left: calc(64.375 * var(--u)); }
-}
-.t-desc p.hang-under + p { margin-top: 0; }   /* на телефоне это первая строка после висящего серого блока */
+.t-desc .hang + p { margin-top: 0; }   /* следующий абзац — сразу, через обычный межстрочный */
 .t-desc .hang-open p { margin: 0; }
+.t-desc .hang-open .mute { font-weight: 500; }   /* серый — той же толщины, что чёрный */
 .hang-row { display: flex; align-items: baseline; gap: .3em; }
 .hang-row > .lead { flex: none; }
 .hang-open { flex: 1; min-width: 0; }
@@ -525,7 +522,6 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--ink); outline-o
   .projects-label { display: block; margin: calc(30 * var(--u)) 0 calc(10 * var(--u)); }
   .strip--me.is-open { display: block; }
   .strips { border-bottom: var(--rule) solid var(--line-gray); }   /* линия под последней строкой списка (открытый проект уезжает наверх) */
-  .desk-only { display: none !important; }
 
   .strip__face {
     position: relative;
@@ -886,7 +882,6 @@ var PROJECTS = [
     desc: [
       ['lead', 'айсберг моих детских психотравм — это персонажи телепрограмм 2000-х. этому феномену я посвятила лонгрид.'],
       ['mute', 'разобрала сцены, заставки и персонажей, которые остались в моей памяти детским кошмаром.'],
-      ['lead desk-only', 'лонгрид можно прочитать целиком.'],
       ['link', 'читать лонгрид', 'tv2000/tv2000.html', 'tild6463-6333-4761-b230-303435356530/4561c0b7-39b2-48d5-8.png']
     ],
     images: [
@@ -974,15 +969,14 @@ function projectBody(p) {
   var i = PROJECTS.indexOf(p), next = PROJECTS[(i + 1) % PROJECTS.length];
   var hungAt = -1;
   var desc = p.desc.map(function (d, k) {
-    // телефон: первый серый абзац начинается на последней строке чёрного, сразу после него (hangLayout)
+    // первый серый абзац начинается на последней строке чёрного, сразу после него (hangLayout)
     var nx = p.desc[k + 1];
     if (hungAt < 0 && d[0] === 'lead' && nx && nx[0] === 'mute') {
       hungAt = k;
-      return '<p class="lead desk-only">' + fmt(d[1]) + '</p>' +
-        '<div class="hang mob-only"><p class="lead">' + fmt(d[1]) + '<span class="hang-end"></span></p>' +
+      return '<div class="hang"><p class="lead">' + fmt(d[1]) + '<span class="hang-end"></span></p>' +
         '<div class="hang-open"><p class="mute">' + fmt(nx[1]) + '</p></div></div>';
     }
-    if (hungAt >= 0 && k === hungAt + 1) return '<p class="mute desk-only hang-under">' + fmt(d[1]) + '</p>';
+    if (hungAt >= 0 && k === hungAt + 1) return '';
     if (d[0] === 'order') return '<p class="lead">' + esc(d[1]) + ' →\u00A0<a href="' + d[3] + '" target="_blank" rel="noopener">' + esc(d[2]) + '</a></p>';   // текст → ссылка
     if (d[0] === 'link') return '<a class="read-bar" href="' + d[2] + '" target="_blank" rel="noopener">' +
       '<span>' + esc(d[1]) + '</span></a>';
@@ -1065,15 +1059,15 @@ function noHanging(root) {
 }
 
 // серый абзац поднимается на последнюю строку чёрного и встаёт сразу после последнего слова;
-// если на строке мало места — остаётся ниже, с начала строки
+// если на строке мало места — встаёт строкой ниже с отступом на ширину иконки проекта
 function hangLayout(root) {
   root.querySelectorAll('.hang').forEach(function (h) {
     var p = h.querySelector('p.lead'), end = h.querySelector('.hang-end'), open = h.querySelector('.hang-open');
     open.style.marginLeft = ''; open.style.marginTop = '';
-    if (!h.offsetParent || !end) return;                     // скрыт (компьютер)
+    if (!h.offsetParent || !end) return;                     // блок ещё не показан
     var cs = getComputedStyle(p), w = p.clientWidth;
     var x = end.getBoundingClientRect().left - p.getBoundingClientRect().left + .3 * parseFloat(cs.fontSize);
-    if (w - x < .45 * w) return;
+    if (w - x < .45 * w) { open.style.marginLeft = .24 * w + 'px'; return; }
     open.style.marginLeft = x + 'px';
     open.style.marginTop = -parseFloat(cs.lineHeight) + 'px';
   });
@@ -1114,21 +1108,29 @@ function render(route) {
       var flow = body.querySelector('.body__flow');
       if (flow) {
         flow.scrollTop = 0; flow.classList.remove('is-scrolled');
+        var sd = body.querySelector('.body__side'); if (sd) sd.scrollTop = 0;
         if (!flow.dataset.watch) {
           flow.dataset.watch = '1';
           var side = body.querySelector('.body__side');
           flow.addEventListener('scroll', function () {
             flow.classList.toggle('is-scrolled', flow.scrollTop > 2);
-            // текст стоит на месте; если он не влезает — догоняет плавно вместе с картинками
-            if (side && innerWidth >= 700) {
-              var fMax = flow.scrollHeight - flow.clientHeight, sMax = side.scrollHeight - side.clientHeight;
-              side.scrollTop = sMax > 0 && fMax > 0 ? sMax * flow.scrollTop / fMax : 0;
-            }
           }, { passive: true });
+          // компьютер: одна прокрутка на всю страницу проекта — вниз сначала текст до конца, потом картинки;
+          // вверх наоборот — сначала картинки до начала, потом текст
           body.addEventListener('wheel', function (e) {
-            if (innerWidth < 700 || flow.contains(e.target)) return;
+            if (innerWidth < 700) return;
             e.preventDefault();
-            flow.scrollTop += e.deltaMode === 1 ? e.deltaY * 30 : e.deltaY;
+            var d = e.deltaMode === 1 ? e.deltaY * 30 : e.deltaY;
+            if (d > 0) {
+              var left = side ? side.scrollHeight - side.clientHeight - side.scrollTop : 0;
+              var take = left >= 1 ? Math.min(d, left) : 0;
+              if (take) side.scrollTop += take;
+              flow.scrollTop += d - take;
+            } else {
+              var back = flow.scrollTop >= 1 ? Math.max(d, -flow.scrollTop) : 0;
+              if (back) flow.scrollTop += back;
+              if (side) side.scrollTop += d - back;
+            }
           }, { passive: false });
         }
       }
