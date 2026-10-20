@@ -449,12 +449,15 @@ h1, h2, h3, p, ul, ol { font: inherit; padding: 0; list-style: none; }
   .strip--me .dirs, .strip--me .me__text { display: none !important; }
   .strip--me .me__m { display: block; }
 }
-.me__m { display: none; }
-.me__m-row { display: flex; align-items: baseline; gap: .3em; }
-.me__m-row > .lead { flex: none; }
-.me__m-open { flex: 1; min-width: 0; }
-.t-desc .me__m-open p + p { margin-top: .5em; }
-.me__m-open a { color: inherit; }
+.me__m, .mob-only { display: none; }
+@media (max-width: 699px) { .mob-only { display: block; } }
+.t-desc .hang, .t-desc .hang + p { margin-top: .9em; }
+.nobr { white-space: nowrap; }
+.hang-row { display: flex; align-items: baseline; gap: .3em; }
+.hang-row > .lead { flex: none; }
+.hang-open { flex: 1; min-width: 0; }
+.t-desc .hang-open p + p { margin-top: .5em; }
+.hang-open a { color: inherit; }
 @media (min-width: 700px) { .strip--me .dirs { margin-top: calc(-42 * var(--u)); } }   /* на одной линии с номерами 01–04 */
 .me__aside { grid-column: 3 / span 2; grid-row: 2; display: grid; grid-template-columns: repeat(2, calc(128.75 * var(--u))); column-gap: var(--gap); align-items: start; margin-top: calc(30 * var(--u)); }
 .me__aside img { width: 100%; }
@@ -950,13 +953,31 @@ function head(num, title, closable, label) {
     (closable === false ? '' : '<button type="button" class="body__close t-head" data-go="" aria-label="Закрыть, вернуться к me">×</button>') + '</div>';
 }
 
+function fmt(s) {
+  return esc(s)
+    .replace(/[^\s<>{}]+-[^\s<>{}]+/g, '<span class="nobr">$&</span>')       // слова через дефис не рвутся
+    .replace(/\{([^}]+)\}/g, '<span class="keep-case">$1</span>');           // {Слово} — без строчных
+}
+
 function projectBody(p) {
   var i = PROJECTS.indexOf(p), next = PROJECTS[(i + 1) % PROJECTS.length];
-  var desc = p.desc.map(function (d) {
+  var hungAt = -1;
+  var desc = p.desc.map(function (d, k) {
+    // телефон: первый серый абзац висит справа от последнего слова чёрного, как на главной
+    var nx = p.desc[k + 1];
+    if (hungAt < 0 && d[0] === 'lead' && nx && nx[0] === 'mute') {
+      hungAt = k;
+      var cut = d[1].lastIndexOf(' ');
+      return '<p class="lead desk-only">' + fmt(d[1]) + '</p>' +
+        '<div class="hang mob-only"><p class="lead">' + fmt(d[1].slice(0, cut)) + '</p>' +
+        '<div class="hang-row"><p class="lead">' + fmt(d[1].slice(cut + 1)) + '</p>' +
+        '<div class="hang-open"><p class="mute">' + fmt(nx[1]) + '</p></div></div></div>';
+    }
+    if (hungAt >= 0 && k === hungAt + 1) return '<p class="mute desk-only">' + fmt(d[1]) + '</p>';
     if (d[0] === 'order') return '<p class="lead">' + esc(d[1]) + ' →\u00A0<a href="' + d[3] + '" target="_blank" rel="noopener">' + esc(d[2]) + '</a></p>';   // текст → ссылка
     if (d[0] === 'link') return '<a class="read-bar" href="' + d[2] + '" target="_blank" rel="noopener">' +
       '<span>' + esc(d[1]) + '</span></a>';
-    return '<p class="' + d[0] + '">' + esc(d[1]).replace(/\{([^}]+)\}/g, '<span class="keep-case">$1</span>') + '</p>';   // {Слово} — без строчных
+    return '<p class="' + d[0] + '">' + fmt(d[1]) + '</p>';
   }).join('');
   var imgs = p.images.map(function (s0, k) {
     var r = RHYTHM[k % RHYTHM.length];
@@ -1003,8 +1024,8 @@ function meBody() {
         // телефон: серый текст висит справа от последнего слова, под ним телеграм
         '<div class="me__m">' +
           '<p class="lead">мультидисциплинарный дизайнер. делаю айдентику, визуальные системы и концептуальные проекты — от исследования и идеи до готового</p>' +
-          '<div class="me__m-row"><p class="lead">носителя.</p>' +
-          '<div class="me__m-open"><p class="mute">открыта к сотрудничеству с брендами, культурными институциями и авторами.</p>' +
+          '<div class="hang-row"><p class="lead">носителя.</p>' +
+          '<div class="hang-open"><p class="mute">открыта к сотрудничеству с брендами, культурными институциями и авторами.</p>' +
           '<p class="mute"><a href="https://t.me/iamviquzy" target="_blank" rel="noopener">@iamviquzy</a></p></div></div>' +
         '</div>' +
       '</div>' +
