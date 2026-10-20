@@ -453,6 +453,11 @@ h1, h2, h3, p, ul, ol { font: inherit; padding: 0; list-style: none; }
 @media (max-width: 699px) { .mob-only { display: block; } }
 .t-desc .hang, .t-desc .hang + p { margin-top: .9em; }
 .nobr { white-space: nowrap; }
+/* компьютер: серый абзац сразу под чёрным, с отступом на ширину иконки проекта; следующая строка — тоже без зазора */
+@media (min-width: 700px) {
+  .t-desc p.mute.hang-under { margin-top: 0; padding-left: calc(64.375 * var(--u)); }
+  .t-desc p.hang-under + p { margin-top: 0; }
+}
 .hang-row { display: flex; align-items: baseline; gap: .3em; }
 .hang-row > .lead { flex: none; }
 .hang-open { flex: 1; min-width: 0; }
@@ -973,7 +978,7 @@ function projectBody(p) {
         '<div class="hang-row"><p class="lead">' + fmt(d[1].slice(cut + 1)) + '</p>' +
         '<div class="hang-open"><p class="mute">' + fmt(nx[1]) + '</p></div></div></div>';
     }
-    if (hungAt >= 0 && k === hungAt + 1) return '<p class="mute desk-only">' + fmt(d[1]) + '</p>';
+    if (hungAt >= 0 && k === hungAt + 1) return '<p class="mute desk-only hang-under">' + fmt(d[1]) + '</p>';
     if (d[0] === 'order') return '<p class="lead">' + esc(d[1]) + ' →\u00A0<a href="' + d[3] + '" target="_blank" rel="noopener">' + esc(d[2]) + '</a></p>';   // текст → ссылка
     if (d[0] === 'link') return '<a class="read-bar" href="' + d[2] + '" target="_blank" rel="noopener">' +
       '<span>' + esc(d[1]) + '</span></a>';
