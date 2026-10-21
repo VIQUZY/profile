@@ -353,6 +353,13 @@
         for (const img of entry.target.querySelectorAll('img[loading="lazy"]')) {
           img.loading = 'eager';
         }
+        // читатель обогнал фоновую загрузку — картинки этой сцены грузим сразу, без очереди
+        if (!root.classList.contains('loading')) {
+          for (const img of entry.target.querySelectorAll('img[data-src]')) {
+            img.src = img.dataset.src;
+            img.removeAttribute('data-src');
+          }
+        }
       }
     },
     { rootMargin: '150% 0px' }
@@ -535,10 +542,29 @@
      Если какая-то картинка не грузится дольше LOADER_TIMEOUT, страница
      всё равно откроется. */
   const LOADER_TIMEOUT = 25000;
+  // Ждём только первую половину картинок (по весу) — у них в HTML обычный src.
+  // У второй половины data-src: они начинают грузиться после открытия страницы,
+  // по порядку сверху вниз, пока человек читает начало.
+  const LATER_PARALLEL = 4;
+  function loadLaterImages() {
+    const queue = [...document.querySelectorAll('img[data-src]')];
+    const next = () => {
+      const img = queue.shift();
+      if (!img) return;
+      if (!img.dataset.src) return next(); // уже грузится: сцена оказалась рядом с экраном
+      img.loading = 'eager';
+      img.addEventListener('load', next, { once: true });
+      img.addEventListener('error', next, { once: true });
+      img.src = img.dataset.src;
+      img.removeAttribute('data-src');
+    };
+    for (let i = 0; i < LATER_PARALLEL; i++) next();
+  }
+
   function preloadImages() {
     const loader = document.getElementById('loader');
     const pct = loader && loader.querySelector('.loader-pct');
-    const images = [...document.images];
+    const images = [...document.images].filter((img) => !img.dataset.src);
     images.forEach((img) => { img.loading = 'eager'; });
     let done = 0;
     const show = () => {
@@ -562,6 +588,7 @@
   refresh();
   setupReveal();
   preloadImages().then(() => {
+    loadLaterImages();
     window.scrollTo(0, 0);
     refresh();
     root.classList.remove('loading');
