@@ -426,7 +426,8 @@ h1, h2, h3, p, ul, ol { font: inherit; padding: 0; list-style: none; }
   to   { transform: translate(calc(12 * var(--u)), calc(-16 * var(--u))) rotate(2deg); }
 }
 .body__side .col2 { margin-left: calc(138.75 * var(--u)); }
-/* направления — в два столбика по сетке */
+/* направления — в два столбика по сетке (на телефоне — в три) */
+@media (min-width: 700px) { .dirs--m { display: none !important; } }
 .dirs { display: grid; grid-template-columns: repeat(2, calc(128.75 * var(--u))); column-gap: var(--gap); }
 .dirs p { margin: 0 !important; }
 .keep-case { text-transform: none; }
@@ -602,6 +603,8 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--ink); outline-o
    закладка с лицами опускается и ложится на правую страницу
    ========================================================================== */
 .stage { --k: .3px; }                      /* ставится скриптом по высоте сцены */
+.stage .nb-scene { opacity: 0; transition: opacity .35s ease; }   /* виден, когда картинки готовы */
+.stage.nb-ready .nb-scene { opacity: 1; }
 .nb-scene {
   position: absolute;
   left: calc(50% - 375.5 * var(--k)); top: calc(50% - 735.5 * var(--k));
@@ -752,7 +755,8 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--ink); outline-o
   .page .strips .strip__face:hover { background: none; color: var(--ink); }
   /* главная: отступ между направлениями и текстом, блокнот по центру */
   .strip--me .body__side > .mute:first-child { margin-bottom: calc(20 * var(--u)); }
-  .dirs { grid-template-columns: var(--hang-x, calc(80 * var(--u))) auto; column-gap: 0; }   /* второй столбик — ровно там, где начинается серый текст */
+  .dirs { grid-template-columns: auto auto auto; justify-content: space-between; column-gap: 0; }   /* три столбика по ширине текста */
+  .dirs--d { display: none !important; }
   .strip--me .stage { width: 100%; height: calc(320 * var(--u)) !important; margin: calc(10 * var(--u)) 0 calc(44 * var(--u)) !important; }
   /* проект: без лишнего отступа сверху, картинки во всю ширину */
   .strip:not(.strip--me) .body__head { display: none; }
@@ -887,8 +891,7 @@ var PROJECTS = [
     icons: ['tild6238-3630-4036-a530-383730323866/runEu0DtKgChAE-Scene.gif', 'tild3831-3130-4163-b163-313139303566/Group_47.png'],
     pos: { l: '6%', t: '64%', w: '24%', r: '3deg' },
     desc: [
-      ['lead', 'айсберг моих детских психотравм — это персонажи телепрограмм 2000-х. этому феномену я посвятила лонгрид.'],
-      ['mute', 'разобрала сцены, заставки и персонажей, которые остались в моей памяти детским кошмаром.'],
+      ['lead', 'айсберг моих детских психотравм — это персонажи телепрограмм 2000-х. этому феномену я посвятила лонгрид. разобрала сцены, заставки и персонажей, которые остались в моей памяти детским кошмаром.'],
       ['link', 'читать лонгрид', 'tv2000/tv2000.html', 'tild6463-6333-4761-b230-303435356530/4561c0b7-39b2-48d5-8.png']
     ],
     images: [
@@ -916,15 +919,28 @@ var page = document.querySelector('.page');
 var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 // 3D-блокнот: масштаб по высоте сцены (до 94% высоты, но не больше 600 по макету)
+function nbSize(stage) {
+  var u = document.querySelector('.page').clientWidth / (innerWidth < 700 ? 320 : 1200);
+  var h = Math.min(stage.clientHeight * 0.94, 600 * u);
+  var k = Math.min(h / 1471, stage.clientWidth / 1480);   // раскрытый разворот должен влезать по ширине
+  stage.style.setProperty('--k', k + 'px');
+}
 var nbObserver = 'ResizeObserver' in window ? new ResizeObserver(function (entries) {
-  entries.forEach(function (e) {
-    var stage = e.target;
-    var u = document.querySelector('.page').clientWidth / (innerWidth < 700 ? 320 : 1200);
-    var h = Math.min(stage.clientHeight * 0.94, 600 * u);
-    var k = Math.min(h / 1471, stage.clientWidth / 1480);   // раскрытый разворот должен влезать по ширине
-    stage.style.setProperty('--k', k + 'px');
-  });
+  entries.forEach(function (e) { nbSize(e.target); });
 }) : null;
+// картинки блокнота декодируются заранее, блокнот появляется уже с обложкой
+function nbReady(stage) {
+  var cs = getComputedStyle(stage.querySelector('.nb-scene'));
+  var jobs = ['--img-cover', '--img-pl', '--img-pr', '--img-back', '--img-window', '--img-strip', '--img-book', '--img-hand'].map(function (v) {
+    var m = /url\(["']?([^"')]+)/.exec(cs.getPropertyValue(v));
+    if (!m) return null;
+    var im = new Image(); im.src = m[1];
+    return im.decode ? im.decode().catch(function () {}) : null;
+  });
+  var done = function () { stage.classList.add('nb-ready'); };
+  Promise.all(jobs).then(done);
+  setTimeout(done, 1500);                                  // на всякий случай не ждём дольше
+}
 
 
 function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
@@ -1026,13 +1042,12 @@ function meBody() {
   return head('', '', false) +
     '<div class="body__grid">' +
       '<div class="body__side t-desc">' +
-        '<div class="mute dirs"><p>branding<br>content<br>merch</p><p>art direction<br>performance<br>ai</p></div>' +
+        '<div class="mute dirs dirs--d"><p>branding<br>content<br>merch</p><p>art direction<br>performance<br>ai</p></div>' +
+        '<div class="mute dirs dirs--m"><p>branding<br>content</p><p>merch<br>art direction</p><p>performance<br>ai</p></div>' +
         '<div class="me__text">' +
         // серый текст висит справа от последнего слова (hangLayout), под ним телеграм
-        '<div class="me__m hang">' +
-          '<p class="lead">мультидисциплинарный дизайнер. делаю айдентику, визуальные системы и концептуальные проекты — от исследования и идеи до готового носителя.<span class="hang-end"></span></p>' +
-          '<div class="hang-open"><p class="mute">открыта<br>к сотрудничеству</p>' +
-          '<p class="mute"><a href="https://t.me/iamviquzy" target="_blank" rel="noopener">@iamviquzy</a></p></div>' +
+        '<div class="me__m">' +
+          '<p class="lead">мультидисциплинарный дизайнер. делаю айдентику, визуальные системы и концептуальные проекты — от исследования и идеи до готового носителя. открыта к сотрудничеству →\u00A0<a href="https://t.me/iamviquzy" target="_blank" rel="noopener">@iamviquzy</a></p>' +
         '</div>' +
         // компьютер: чёрный абзац, ниже короткий серый блок с телеграмом, внизу alumni и год
         '<p class="lead me__d">мультидисциплинарный дизайнер. делаю айдентику, визуальные системы и концептуальные проекты — от исследования и идеи до готового носителя</p>' +
@@ -1194,6 +1209,8 @@ if (girl) girl.addEventListener('click', function () {
 // раскрытие блокнота: наведение мышью (или нажатие на телефоне)
 function nbSetup(stage) {
   var scene = stage.querySelector('.nb-scene'), nb = stage.querySelector('.nb');
+  nbSize(stage);
+  nbReady(stage);
   var open = false, timer = null, target = 0;
   function angleNow() {
     var an = nb.getAnimations ? nb.getAnimations()[0] : null;
